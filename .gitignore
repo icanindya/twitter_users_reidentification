@@ -1,0 +1,8 @@
+/tests/
+/external_projects/
+/batches/
+/selenium_driver/
+/credentials/
+/__pycache__/
+/.idea/
+/.spyproject/
