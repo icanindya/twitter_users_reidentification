@@ -1,6 +1,5 @@
 import os
-
-import mongo_client as mc
+import helper
 
 '''
 Stores the voter records from FL_REC_SPLITS_DIR as
@@ -44,4 +43,4 @@ if __name__ == '__main__':
                              }
                 voter_objs.append(voter_obj)
 
-    store_voters(mc.get(), voter_objs)
+    store_voters(helper.get_mongo_client(), voter_objs)

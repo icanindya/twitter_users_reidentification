@@ -8,11 +8,9 @@ Scales by using multiple Twitter App credentials.
 import datetime
 import sys
 import time
-
 import tweepy
 import twitter_credentials as tcred
-
-import mongo_client as mc
+import helper
 
 RATE_LIMIT = 15
 TIME_WINDOW = 15 * 60
@@ -21,17 +19,7 @@ api_count = 0
 begin_timestamp = end_timestamp = None
 
 
-def update_fnf5k_index(mongo_client, index_col_name, position):
-    twitter_db = mongo_client['twitter']
-    index_col = twitter_db[index_col_name]
-    query = index_col.find_one()
-    newvalues = {'$set': {'position': position}}
-    index_col.update_one(query, newvalues)
-
-
-def get_fnf5k_index(mongo_client, index_col_name):
-    twitter_db = mongo_client['twitter']
-    index_col = twitter_db[index_col_name]
+def get_fnf5k_index(index_col):
     index = index_col.find_one({}, {'position': 1})
     if not index:
         position = -1
@@ -40,11 +28,14 @@ def get_fnf5k_index(mongo_client, index_col_name):
     return index['position']
 
 
-def store_fnf(mongo_client, main_col_name, user_id, f_ids):
-    json = {'user_id': user_id, 'f_ids': f_ids}
+def update_fnf5k_index(index_col, position):
+    query = index_col.find_one()
+    newvalues = {'$set': {'position': position}}
+    index_col.update_one(query, newvalues)
 
-    twitter_db = mongo_client['twitter']
-    main_col = twitter_db[main_col_name]
+
+def store_fnf(main_col, user_id, f_ids):
+    json = {'user_id': user_id, 'f_ids': f_ids}
     main_col.insert_one(json)
 
 
@@ -97,18 +88,18 @@ if __name__ == '__main__':
 
     api_count = 0
 
-    mongo_client = mc.get()
+    mongo_client = helper.get_mongo_client()
     twitter_db = mongo_client['twitter']
     users_col = twitter_db['users']
 
     if sys.argv[1] == 'followers':
         user_ids = users_col.distinct('id_str', {'followers_count': {'$lt': 5001}, 'protected': False})
-        main_col_name = 'followers5k'
-        index_col_name = 'followers5k_index'
+        main_col = twitter_db['followers5k']
+        index_col = twitter_db['followers5k_index']
     elif sys.argv[1] == 'following':
         user_ids = users_col.distinct('id_str', {'friends_count': {'$lt': 5001}, 'protected': False})
-        main_col_name = 'following5k'
-        index_col_name = 'following5k_index'
+        main_col = twitter_db['following5k']
+        index_col = twitter_db['following5k_index']
 
     apis = []
 
@@ -119,11 +110,11 @@ if __name__ == '__main__':
 
     RATE_LIMIT *= len(apis)
 
-    prev_position = get_fnf5k_index(mongo_client, index_col_name)
+    prev_position = get_fnf5k_index(index_col)
 
     for position, user_id in enumerate(user_ids):
         if position <= prev_position:
             continue
         f_ids = get_fnf(apis, position, user_id)
-        store_fnf(mongo_client, main_col_name, user_id, f_ids)
-        update_fnf5k_index(mongo_client, index_col_name, position)
+        store_fnf(main_col, user_id, f_ids)
+        update_fnf5k_index(index_col, position)

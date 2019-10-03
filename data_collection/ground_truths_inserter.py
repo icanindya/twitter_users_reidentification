@@ -1,6 +1,6 @@
 import os
 
-import mongo_client as mc
+import helper
 
 TW_RUNNING_REC_DIR = r'D:\Data\Linkage\FL\FL18\tw_running_records_new'
 MASTER_GROUND_TRUTHS_DIR = r'D:\Data\Linkage\FL\FL18\master_ground_truths'
@@ -64,4 +64,4 @@ if __name__ == '__main__':
     #                    if twitter_name == '':
     #                        print(master_ground_truths_file, index)
 
-    store_ground_truths(mc.get(), ground_truth_objs)
+    store_ground_truths(helper.get_mongo_client(), ground_truth_objs)

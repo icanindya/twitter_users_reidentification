@@ -1,11 +1,24 @@
+import mongo_credentials as mcred
+import urllib
+import pymongo
+
+mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
+mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
+
+
+def get_mongo_client():
+    mongo_client = pymongo.MongoClient('mongodb://{}:{}@127.0.0.1:27017'.format(mongo_user, mongo_pass))
+    return mongo_client
+
+
 def get_maif_age_label(age):
     if age <= 18:
         return '<=18'
-    elif age >= 19 and age <= 22:
+    elif 19 <= age <= 22:
         return '19-22'
-    elif age >= 23 and age <= 33:
+    elif 23 <= age <= 33:
         return '23-33'
-    elif age >= 34 and age <= 45:
+    elif 34 <= age <= 45:
         return '34-45'
     else:
         return '>=46'

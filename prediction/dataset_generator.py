@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from nltk.tokenize.casual import TweetTokenizer
 from text_processing import FeatureExtractor
 
-import mongo_client as mc
+import helper
 
 ALL_TWEETS_TOKENS_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_tokens.csv'
 ALL_TWEETS_EXT_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_ext_features.csv'
@@ -119,7 +119,7 @@ def ds_all_tweets(mode):
     elif mode == 2:
         all_tweets_path = ALL_TWEETS_COMBINED_PATH
 
-    mongo_client = mc.get()
+    mongo_client = helper.get_mongo_client()
 
     twitter_db = mongo_client['twitter']
     tweets_col = twitter_db['tweets']
@@ -155,7 +155,7 @@ def ds_yearly_tweets(mode):
     elif mode == 2:
         yearly_tweets_path = YEARLY_TWEETS_COMBINED_PATH
 
-    mongo_client = mc.get()
+    mongo_client = helper.get_mongo_client()
 
     twitter_db = mongo_client['twitter']
     tweets_col = twitter_db['tweets']
@@ -205,7 +205,7 @@ def ds_x_tweets(mode):
     elif mode == 2:
         x_tweets_path = X_TWEETS_COMBINED_PATH
 
-    mongo_client = mc.get()
+    mongo_client = helper.get_mongo_client()
 
     twitter_db = mongo_client['twitter']
     tweets_col = twitter_db['tweets']

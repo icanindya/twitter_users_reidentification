@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import config
-import mongo_client as mc
+import helper
 
 
 def linkedin_login(driver):
@@ -34,7 +34,7 @@ linkedin_login(driver)
 with open(config.HTTPREQ_JS_PATH, 'r') as rf:
     js_func = ''.join(rf.readlines())
 
-mongo_client = mc.get()
+mongo_client = helper.get_mongo_client()
 
 twitter_db = mongo_client['twitter']
 voters_col = twitter_db['voters']

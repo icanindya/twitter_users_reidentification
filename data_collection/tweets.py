@@ -1,11 +1,8 @@
 import os
 import time
-import urllib.parse
-
-import mongo_credentials as mcred
-import pymongo
 import tweepy
 import twitter_credentials as tcred
+import helper
 
 LABEL_FILE_PATH = ''
 RATE_LIMIT = 1500
@@ -111,9 +108,7 @@ if __name__ == '__main__':
 
     api = tweepy.API(auth)
 
-    mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
-    mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
-    mongo_client = pymongo.MongoClient('mongodb://{}:{}@127.0.0.1:27017'.format(mongo_user, mongo_pass))
+    mongo_client = helper.get_mongo_client()
 
     indices = get_indices(mongo_client)
     last_user_id = indices['user_id']
