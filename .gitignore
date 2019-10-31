@@ -3,6 +3,6 @@
 /batches/
 /selenium_driver/
 /credentials/
-/__pycache__/
+__pycache__/
 /.idea/
 /.spyproject/
