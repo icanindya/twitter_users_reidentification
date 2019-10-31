@@ -4,48 +4,38 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 
 from nltk.tokenize.casual import TweetTokenizer
-from text_processing import FeatureExtractor
 
 import helper
 
-ALL_TWEETS_TOKENS_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_tokens.csv'
-ALL_TWEETS_EXT_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_ext_features.csv'
-ALL_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_combined.csv'
+ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\all_tweets.csv'
+YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\yearly_tweets.csv'
+X_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\x_tweets.csv'
 
-YEARLY_TWEETS_TOKENS_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_tokens.csv'
-YEARLY_TWEETS_EXT_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_ext_features.csv'
-YEARLY_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_combined.csv'
-
-X_TWEETS_TOKENS_PATH = r'D:\Data\Linkage\FL\FL18\tweets\x_tweets_tokens.csv'
-X_TWEETS_EXT_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\x_tweets_ext_features.csv'
-X_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\x_tweets_combined.csv'
+CSV_HEADER = ['twitter_id', 'voter_serial', 'dob', 'age', 'sex', 'race_code',
+              'zip_code', 'city', 'party', 'tweet_startdate', 'tweet_enddate',
+              'num_tweets', 'num_hashtags', 'user_mentions', 'num_urls',
+              'num_media', 'num_symbols', 'num_polls', 'text']
 
 row = 0
 
-tweet_tokenizer = TweetTokenizer(preserve_case=True, reduce_len=False, strip_handles=False)
-
-
-def is_urllike(text):
-    lower = text.lower()
-    if lower.startswith('http://') or lower.startswith('https://'):
-        return True
-    else:
-        return False
-
 
 def get_datetime(datetime_str):
+
     return datetime.strptime(datetime_str, '%a %b %d %H:%M:%S %z %Y')
 
 
 def date_difference_days(datetime1, datetime2):
+
     return (datetime1 - datetime2).days
 
 
 def date_difference_years(datetime1, datetime2):
+
     return int((datetime1 - datetime2).days // 365.2425)
 
 
 def get_age(tweet_obj_list, begin_index, end_index, dob):
+
     begin_datetime = get_datetime(tweet_obj_list[begin_index]['created_at'])
     end_datetime = get_datetime(tweet_obj_list[end_index]['created_at'])
     days_in_window = date_difference_days(end_datetime, begin_datetime)
@@ -55,51 +45,51 @@ def get_age(tweet_obj_list, begin_index, end_index, dob):
     return age
 
 
-def get_csv_row(twitter_id, tweet_obj_list, begin_index, end_index, voter, convert_dob, mode):
+def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
+
+    voter['age'] = get_age(tweet_obj_list, begin_index, end_index, voter['dob'])
+
+    voter_attributes = [voter['twitter_id'], voter['serial'], voter['dob'],
+                        voter['age'], voter['sex'], voter['race_code'],
+                        voter['zip_code'], voter['city'], voter['party']]
+
     tweets = list(map(lambda x: x['text'].replace('\0', ''), tweet_obj_list[begin_index: end_index + 1]))
+    text = ' '.join(tweets)
 
-    voter['dob_or_age'] = voter['dob']
-    if convert_dob:
-        voter['dob_or_age'] = get_age(tweet_obj_list, begin_index, end_index, voter['dob'])
-    voter_attributes = [voter['dob_or_age'], voter['sex'], voter['race_code'], voter['zip_code'], voter['city'],
-                        voter['party']]
+    tweets_metadata = defaultdict(int)
 
-    if mode == 0:
-        doc = ' '.join(tweets)
-        tokens = [token for token in tweet_tokenizer.tokenize(doc) if is_urllike(token) == False]
-        token_elem = ' '.join(tokens)
-        csv_row = [twitter_id, token_elem] + voter_attributes
+    tweets_metadata['num_tweets'] = len(tweet_obj_list)
 
-    elif mode == 1:
-        tweets_data = defaultdict(int)
+    for tweet_obj in tweet_obj_list[begin_index: end_index + 1]:
 
-        for tweet_obj in tweet_obj_list[begin_index: end_index + 1]:
+        if 'hashtags' in tweet_obj['entities']:
+            tweets_metadata['num_hashtags'] += len(tweet_obj['entities']['hashtags'])
 
-            if 'hashtags' in tweet_obj['entities']:
-                tweets_data['num_hashtags'] += len(tweet_obj['entities']['hashtags'])
+        if 'user_mentions' in tweet_obj['entities']:
+            tweets_metadata['num_mentions'] += len(tweet_obj['entities']['user_mentions'])
 
-            if 'user_mentions' in tweet_obj['entities']:
-                tweets_data['num_mentions'] += len(tweet_obj['entities']['user_mentions'])
+        if 'urls' in tweet_obj['entities']:
+            tweets_metadata['num_urls'] += len(tweet_obj['entities']['urls'])
 
-            if 'urls' in tweet_obj['entities']:
-                tweets_data['num_urls'] += len(tweet_obj['entities']['urls'])
+        if 'media' in tweet_obj['entities']:
+            tweets_metadata['num_media'] += len(tweet_obj['entities']['media'])
 
-            if 'media' in tweet_obj['entities']:
-                tweets_data['num_media'] += len(tweet_obj['entities']['media'])
+        if 'symbols' in tweet_obj['entities']:
+            tweets_metadata['num_symbols'] += len(tweet_obj['entities']['symbols'])
 
-            if 'symbols' in tweet_obj['entities']:
-                tweets_data['num_symbols'] += len(tweet_obj['entities']['symbols'])
+        if 'polls' in tweet_obj['entities']:
+            tweets_metadata['num_polls'] += len(tweet_obj['entities']['polls'])
 
-            if 'polls' in tweet_obj['entities']:
-                tweets_data['num_polls'] += len(tweet_obj['entities']['polls'])
+    tweet_startdate = get_datetime(tweet_obj_list[begin_index]['created_at']).strftime('%m/%d/%Y')
+    tweet_enddate = get_datetime(tweet_obj_list[begin_index]['created_at']).strftime('%m/%d/%Y')
 
-        fe = FeatureExtractor(tweets, tweets_data)
+    tweets_attributes = [tweet_startdate, tweet_enddate,
+                         str(tweets_metadata['num_tweets']), str(tweets_metadata['num_hashtags']),
+                         str(tweets_metadata['user_mentions']), str(tweets_metadata['num_urls']),
+                         str(tweets_metadata['num_media']), str(tweets_metadata['num_symbols']),
+                         str(tweets_metadata['num_polls']), text]
 
-        csv_row = [twitter_id] + fe.get_all_features() + voter_attributes
-
-    if mode == 2:
-        doc = ' '.join(tweets)
-        csv_row = [twitter_id, doc] + voter_attributes
+    csv_row = voter_attributes + tweets_attributes
 
     global row
     row += 1
@@ -109,15 +99,7 @@ def get_csv_row(twitter_id, tweet_obj_list, begin_index, end_index, voter, conve
     return csv_row
 
 
-def ds_all_tweets(mode):
-    count = 0
-
-    if mode == 0:
-        all_tweets_path = ALL_TWEETS_TOKENS_PATH
-    elif mode == 1:
-        all_tweets_path = ALL_TWEETS_EXT_FEATURES_PATH
-    elif mode == 2:
-        all_tweets_path = ALL_TWEETS_COMBINED_PATH
+def gen_ds_all_tweets():
 
     mongo_client = helper.get_mongo_client()
 
@@ -128,32 +110,23 @@ def ds_all_tweets(mode):
 
     tuples = [(x['twitter_id'], x['voter_serial']) for x in ground_truths_col.find({})]
 
-    with open(all_tweets_path, 'w', newline='', encoding='utf-8') as wf_csv:
+    with open(ALL_TWEETS_PATH, 'w', newline='', encoding='utf-8') as wf_csv:
         writer = csv.writer(wf_csv, delimiter=',')
+        writer.writerow(CSV_HEADER)
 
         for twitter_id, voter_serial in tuples:
 
             voter = voters_col.find_one({'serial': voter_serial})
+            voter['twitter_id'] = twitter_id
 
             tweet_objs = tweets_col.find({'user.id_str': twitter_id, 'retweeted_status': {'$exists': False}})
             tweet_obj_list = list(tweet_objs)
 
             if tweet_obj_list:
-                writer.writerow(get_csv_row(twitter_id, tweet_obj_list, 0, len(tweet_obj_list) - 1, voter, False, mode))
-                count += 1
-
-    print('count: {}'.format(count))
+                writer.writerow(get_csv_row(voter, tweet_obj_list, 0, len(tweet_obj_list) - 1))
 
 
-def ds_yearly_tweets(mode):
-    count = 0
-
-    if mode == 0:
-        yearly_tweets_path = YEARLY_TWEETS_TOKENS_PATH
-    elif mode == 1:
-        yearly_tweets_path = YEARLY_TWEETS_EXT_FEATURES_PATH
-    elif mode == 2:
-        yearly_tweets_path = YEARLY_TWEETS_COMBINED_PATH
+def gen_ds_yearly_tweets():
 
     mongo_client = helper.get_mongo_client()
 
@@ -164,46 +137,36 @@ def ds_yearly_tweets(mode):
 
     tuples = [(x['twitter_id'], x['voter_serial']) for x in ground_truths_col.find({})]
 
-    with open(yearly_tweets_path, 'w', newline='', encoding='utf-8') as wf_csv:
+    with open(YEARLY_TWEETS_PATH, 'w', newline='', encoding='utf-8') as wf_csv:
         writer = csv.writer(wf_csv, delimiter=',')
+        writer.writerow(CSV_HEADER)
 
         for twitter_id, voter_serial in tuples:
 
             voter = voters_col.find_one({'serial': voter_serial})
+            voter['twitter_id'] = twitter_id
 
             tweet_objs = tweets_col.find({'user.id_str': twitter_id, 'retweeted_status': {'$exists': False}})
             tweet_obj_list = list(tweet_objs)
 
-            begin_index = 0
-            curr_index = 0
+            end_index = len(tweet_obj_list) - 1
+            curr_index = end_index
 
-            while curr_index < len(tweet_obj_list):
+            while curr_index >= 0:
 
-                begin_datetime = get_datetime(tweet_obj_list[begin_index]['created_at'])
+                end_datetime = get_datetime(tweet_obj_list[end_index]['created_at'])
                 curr_datetime = get_datetime(tweet_obj_list[curr_index]['created_at'])
 
-                if date_difference_days(curr_datetime, begin_datetime) <= 365:
-                    if curr_index == len(tweet_obj_list) - 1:
-                        writer.writerow(
-                            get_csv_row(twitter_id, tweet_obj_list, begin_index, curr_index, voter, True, mode))
-                        count += 1
-                    curr_index += 1
+                if date_difference_days(curr_datetime, end_datetime) <= 365:
+                    if curr_index == 0:
+                        writer.writerow(get_csv_row(voter, tweet_obj_list, curr_index, end_index))
+                    curr_index -= 1
                 else:
-                    writer.writerow(
-                        get_csv_row(twitter_id, tweet_obj_list, begin_index, curr_index - 1, voter, True, mode))
-                    count += 1
-                    begin_index = curr_index
-
-    print('count: {}'.format(count))
+                    writer.writerow(get_csv_row(voter, tweet_obj_list, curr_index + 1, end_index))
+                    end_index = curr_index
 
 
-def ds_x_tweets(mode):
-    if mode == 0:
-        x_tweets_path = X_TWEETS_TOKENS_PATH
-    elif mode == 1:
-        x_tweets_path = X_TWEETS_EXT_FEATURES_PATH
-    elif mode == 2:
-        x_tweets_path = X_TWEETS_COMBINED_PATH
+def gen_ds_x_tweets():
 
     mongo_client = helper.get_mongo_client()
 
@@ -214,12 +177,14 @@ def ds_x_tweets(mode):
 
     tuples = [(x['twitter_id'], x['voter_serial']) for x in ground_truths_col.find({})]
 
-    with open(x_tweets_path, 'w', newline='', encoding='utf-8') as wf_csv:
+    with open(X_TWEETS_PATH, 'w', newline='', encoding='utf-8') as wf_csv:
         writer = csv.writer(wf_csv, delimiter=',')
+        writer.writerow(CSV_HEADER)
 
         for twitter_id, voter_serial in tuples:
 
             voter = voters_col.find_one({'serial': voter_serial})
+            voter['twitter_id'] = twitter_id
 
             tweet_objs = tweets_col.find({'user.id_str': twitter_id, 'retweeted_status': {'$exists': False}})
             tweet_obj_list = list(tweet_objs)
@@ -239,18 +204,19 @@ def ds_x_tweets(mode):
                         begin_datetime = get_datetime(tweet_obj_list[begin_index]['created_at'])
                     if curr_index - begin_index == 49:
                         writer.writerow(
-                            get_csv_row(twitter_id, tweet_obj_list, begin_index, curr_index, voter, True, mode))
+                            get_csv_row(voter, tweet_obj_list, begin_index, curr_index))
                         begin_index = curr_index
 
 
 if __name__ == '__main__':
 
-    option = int(sys.argv[1])
-    mode = int(sys.argv[2])
+    option = sys.argv[1]
 
-    if option == 0:
-        ds_all_tweets(mode)
-    elif option == 1:
-        ds_yearly_tweets(mode)
-    elif option == 2:
-        ds_x_tweets(mode)
+    if option == '1':
+        gen_ds_all_tweets()
+    elif option == '2':
+        gen_ds_yearly_tweets()
+    elif option == '3':
+        gen_ds_x_tweets()
+    else:
+        print('Valid options are 1, 2, and 3.')

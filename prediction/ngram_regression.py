@@ -10,7 +10,6 @@ from sklearn.model_selection import train_test_split
 import helper
 
 YEARLY_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_combined.csv'
-input_col_names = ['twitter_id', 'doc', 'dob_or_age', 'sex', 'race_code', 'zip_code', 'city', 'party']
 
 N = 1
 MAX = 5000
@@ -65,8 +64,8 @@ def fit_tfidf(rows):
 
 input_ds_path = YEARLY_TWEETS_COMBINED_PATH
 
-top_onegrams = open(r"D:\top_onegrams_6702746.txt", 'r', encoding='utf-8').read().splitlines()[:MAX]
-top_twograms = open(r"D:\top_twograms_70989637.txt", 'r', encoding='utf-8').read().splitlines()[:MAX]
+top_onegrams = open(r"D:\Data\Linkage\FL\FL18\tweets\maif_top_onegrams.txt", 'r', encoding='utf-8').read().splitlines()[:MAX]
+top_twograms = open(r"D:\Data\Linkage\FL\FL18\tweets\maif_top_twograms.txt", 'r', encoding='utf-8').read().splitlines()[:MAX]
 
 top_ngrams = {1: top_onegrams, 2: top_twograms}
 
@@ -78,7 +77,7 @@ for n in [1, 2]:
 
     vocabulary = top_ngrams[n]
 
-    with open(r"D:\{}grams_label.txt".format(n), 'r', encoding='utf-8') as rf:
+    with open(r"D:\Data\Linkage\FL\FL18\tweets\maif_{}grams_label.txt".format(n), 'r', encoding='utf-8') as rf:
         for i, line in enumerate(rf):
             rows.append(line.rstrip())
     count = 0
@@ -99,7 +98,7 @@ print(X.shape)
 if len(sys.argv) > 1:
     CUSTOM_TFIDF = int(sys.argv[1])
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
 
 clf = Lasso(alpha=0.001)
 clf.fit(X_train, y_train)

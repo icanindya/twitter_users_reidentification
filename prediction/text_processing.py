@@ -57,15 +57,16 @@ class FeatureExtractor:
     lang_tool = language_check.LanguageTool('en-US')
     sentiment_analzer = SentimentIntensityAnalyzer()
 
-    def __init__(self, tweets, tweets_data):
-        self.tweets = tweets
-        self.text = ' '.join(tweets)
-        self.num_hashtags = tweets_data['num_hashtags']
-        self.num_mentions = tweets_data['num_mentions']
-        self.num_urls = tweets_data['num_urls']
-        self.num_media = tweets_data['num_media']
-        self.num_symbols = tweets_data['num_symbols']
-        self.num_polls = tweets_data['num_polls']
+    def __init__(self, tweet_attributes):
+
+        self.num_tweets = tweet_attributes['num_tweets']
+        self.num_hashtags = tweet_attributes['num_hashtags']
+        self.num_mentions = tweet_attributes['num_mentions']
+        self.num_urls = tweet_attributes['num_urls']
+        self.num_media = tweet_attributes['num_media']
+        self.num_symbols = tweet_attributes['num_symbols']
+        self.num_polls = tweet_attributes['num_polls']
+        self.text = tweet_attributes['text']
         self.tokens = self.tweet_tokenizer.tokenize(self.text)
         self.token_lengths = [len(token) for token in self.tokens]
         self.tokens_lower = [token.lower() for token in self.tokens]

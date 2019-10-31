@@ -14,15 +14,15 @@ import helper
 
 dnn = True
 
-ALL_TWEETS_D2V_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_d2v_{}_features.csv'
-YEARLY_TWEETS_D2V_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_d2v_{}_features.csv'
-RESULT_PATH = r'D:\Data\Linkage\FL\FL18\tweets\dnn_d2v_{}_result.txt'
+ALL_TWEETS_D2V_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\maif_all_tweets_d2v_{}_features.csv'
+YEARLY_TWEETS_D2V_FEATURES_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_long_tweets_d2v_{}_features.csv'
+RESULT_PATH = r'D:\Data\Linkage\FL\FL18\tweets\long_dnn_d2v_{}_result.txt'
 
 if __name__ == '__main__':
 
-    for attribute in ['party']:
+    for attribute in ['age']:
 
-        for vec_size in [100, 200, 300]:
+        for vec_size in [100]:
 
             if attribute == 'age':
                 label_index = -6
@@ -37,12 +37,19 @@ if __name__ == '__main__':
                 label_index = -1
                 dataset_path = ALL_TWEETS_D2V_FEATURES_PATH.format(vec_size)
 
+            attributes = ['dob_or_age', 'sex', 'race_code', 'zip_code', 'city', 'party']
+
+            # label_index = -1
+            # dataset_path = ALL_TWEETS_D2V_FEATURES_PATH.format(vec_size)
+            #
+            # attributes = ['dob_or_age']
+
             col_names = ['twitter_id'] + \
                         ['feature_{}'.format(i) for i in range(vec_size)] + \
-                        ['dob_or_age', 'sex', 'race_code', 'zip_code', 'city', 'party']
+                        attributes
 
             df = pd.read_csv(dataset_path, names=col_names)
-            df = df.dropna(subset=['dob_or_age', 'sex', 'race_code', 'zip_code', 'city', 'party'])
+            df = df.dropna(subset=attributes)
             df = shuffle(df)
 
             X = df.iloc[:, 1:1 + vec_size].values
@@ -60,7 +67,7 @@ if __name__ == '__main__':
                 label_binerizer = LabelBinarizer()
                 y = label_binerizer.fit_transform(y)
 
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
 
                 scaler = StandardScaler()
                 X_train = scaler.fit_transform(X_train)
@@ -82,7 +89,7 @@ if __name__ == '__main__':
                         model.add(Dense(num_outputs, activation='softmax'))
 
                         model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-                        model.fit(X_train, y_train, epochs=50, batch_size=100)
+                        model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=100)
 
                         scores = model.evaluate(X_test, y_test)
 
@@ -106,7 +113,7 @@ if __name__ == '__main__':
                             wf.flush()
 
             else:
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
 
                 clf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=0)
 
@@ -126,6 +133,7 @@ if __name__ == '__main__':
                 with open(RESULT_PATH.format(attribute), 'a') as wf:
                     wf.write('attribute: {}\n'.format(attribute))
                     wf.write('dataset size: {}, test: 0.2\n'.format(len(X)))
+                    wf.write('n_estimators: {}, max-depth: {}'.format(100, 10))
                     wf.write('doc2vec size: {}\n'.format(vec_size))
                     wf.write('acc: {}\n'.format(acc))
                     wf.write(str(cm_df) + '\n\n')

@@ -1,9 +1,39 @@
 import mongo_credentials as mcred
+import twitter_credentials as tcred
 import urllib
 import pymongo
+import tweepy
+from datetime import datetime, timedelta
+
 
 mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
 mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
+
+
+def get_twitter_user_apis():
+    ''' application-user apis '''
+    apis = []
+
+    for ckey, cksec, atok, atsec in zip(tcred.consumer_keys, tcred.consumer_key_secrets,
+                                        tcred.access_tokens, tcred.access_token_secrets):
+        auth = tweepy.OAuthHandler(ckey, cksec)
+        auth.set_access_token(atok, atsec)
+        api = tweepy.API(auth)
+        apis.append(api)
+
+    return apis
+
+
+def get_twitter_app_apis():
+    ''' application-oonly apis'''
+    apis = []
+
+    for ckey, cksec in zip(tcred.consumer_keys, tcred.consumer_key_secrets):
+        auth = tweepy.AppAuthHandler(ckey, cksec)
+        api = tweepy.API(auth)
+        apis.append(api)
+
+    return apis
 
 
 def get_mongo_client():
@@ -22,6 +52,17 @@ def get_maif_age_label(age):
         return '34-45'
     else:
         return '>=46'
+
+
+def date_difference_years(datetime1, datetime2):
+    return int((datetime1 - datetime2).days // 365.2425)
+
+
+def get_curr_age_label(dob):
+    dob_datetime = datetime.strptime(dob + ' -0500', '%m/%d/%Y %z')
+    curr_datetime = datetime.strptime('01/01/2019 -0500', '%m/%d/%Y %z')
+    age = date_difference_years(curr_datetime, dob_datetime)
+    return get_maif_age_label(age)
 
 
 def get_race_label(race_code):

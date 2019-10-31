@@ -51,10 +51,10 @@ def get_fnf(apis, position, user_id):
         chosen_api = apis[api_count % len(apis)]
         api_count += 1
 
-        if api_count % RATE_LIMIT == 1:
+        if api_count % (RATE_LIMIT * len(apis)) == 1:
             begin_timestamp = time.time()
 
-        elif api_count % RATE_LIMIT == 0:
+        elif api_count % (RATE_LIMIT * len(apis)) == 0:
             end_timestamp = time.time()
             elapsed_seconds = end_timestamp - begin_timestamp
             if elapsed_seconds < TIME_WINDOW + 5:
@@ -107,8 +107,6 @@ if __name__ == '__main__':
         auth = tweepy.AppAuthHandler(ckey, cksec)
         api = tweepy.API(auth)
         apis.append(api)
-
-    RATE_LIMIT *= len(apis)
 
     prev_position = get_fnf5k_index(index_col)
 

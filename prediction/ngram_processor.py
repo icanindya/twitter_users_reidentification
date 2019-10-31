@@ -45,18 +45,19 @@ def text_processor(text):
     return (onegram_list, twogram_list)
 
 
-YEARLY_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\yearly_tweets_combined.csv'
-ALL_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\all_tweets_combined.csv'
+YEARLY_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\maif_yearly_tweets_combined.csv'
+ALL_TWEETS_COMBINED_PATH = r'D:\Data\Linkage\FL\FL18\tweets\maif_all_tweets_combined.csv'
 input_col_names = ['twitter_id', 'doc', 'dob_or_age', 'sex', 'race_code', 'zip_code', 'city', 'party']
-input_ds_path = YEARLY_TWEETS_COMBINED_PATH
+maif_input_col_names = ['twitter_id', 'doc', 'dob_or_age']
+input_ds_path = ALL_TWEETS_COMBINED_PATH
 
-data = pd.read_csv(input_ds_path, encoding='utf-8', names=input_col_names)
+data = pd.read_csv(input_ds_path, encoding='utf-8', names=maif_input_col_names)
 data_size = data.shape[0]
 
 df = data.loc[:, ['doc', 'dob_or_age']]
 
-with open(r'D:\1grams_label.txt', 'w', encoding='utf-8') as wf1:
-    with open(r'D:\2grams_label.txt', 'w', encoding='utf-8') as wf2:
+with open(r'D:\Data\Linkage\FL\FL18\tweets\maif_1grams_label.txt', 'w', encoding='utf-8') as wf1:
+    with open(r'D:\Data\Linkage\FL\FL18\tweets\maif_2grams_label.txt', 'w', encoding='utf-8') as wf2:
 
         for i, row in df.iterrows():
 
@@ -80,8 +81,8 @@ print('num of two grams: {}'.format(len(twogram_freq)))
 top_onegrams = sorted(onegram_freq.keys(), key=lambda k: onegram_freq[k], reverse=True)[:MAX]
 top_twograms = sorted(twogram_freq.keys(), key=lambda k: twogram_freq[k], reverse=True)[:MAX]
 
-with open(r'D:\top_onegrams_{}.txt'.format(len(onegram_freq)), 'w', encoding='utf-8') as wf:
+with open(r'D:\Data\Linkage\FL\FL18\tweets\maif_top_onegrams.txt', 'w', encoding='utf-8') as wf:
     wf.write('\n'.join(top_onegrams))
 
-with open(r'D:\top_twograms_{}.txt'.format(len(twogram_freq)), 'w', encoding='utf-8') as wf:
+with open(r'D:\Data\Linkage\FL\FL18\tweets\maif_top_twograms.txt', 'w', encoding='utf-8') as wf:
     wf.write('\n'.join(top_twograms))

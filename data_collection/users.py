@@ -1,11 +1,10 @@
 import os
 import time
 import urllib.parse
-
-import mongo_credentials as mcred
 import pymongo
 import tweepy
 import twitter_credentials as tcred
+import helper
 
 RATE_LIMIT = 900
 TIME_WINDOW = 900
@@ -37,7 +36,7 @@ def get_users(api, user_ids, last_user_position):
         users = api.lookup_users(user_ids)
         return users
     except tweepy.TweepError as te:
-        print('error reason: {}'.format(te.reason))
+        print('api error: {}'.format(te.reason))
         return get_users(api, user_ids, last_user_position)
 
 
@@ -77,9 +76,7 @@ if __name__ == '__main__':
 
     api = tweepy.API(auth)
 
-    mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
-    mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
-    mongo_client = pymongo.MongoClient('mongodb://{}:{}@127.0.0.1:27017'.format(mongo_user, mongo_pass))
+    mongo_client = helper.get_mongo_client()
 
     user_ids = []
     indices = get_indices(mongo_client)

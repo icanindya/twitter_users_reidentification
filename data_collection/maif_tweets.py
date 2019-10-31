@@ -30,11 +30,11 @@ def get_tweet_index(index_col):
 def update_tweet_index(index_col, position):
     query = index_col.find_one()
     newvalues = {'$set': {'position': position}}
-    index_col.update_one(query, newvalues, upsert=True)
+    index_col.update_one(query, newvalues)
 
 
-def store_tweets(tweets_col, tweet_objs):
-    tweets_col.insert_many(tweet_objs)
+def store_tweets(tweets_col, tweet_jsons):
+    tweets_col.insert_many(tweet_jsons)
 
 
 def get_tweets(apis, tweet_ids):
@@ -50,10 +50,10 @@ def get_tweets(apis, tweet_ids):
         chosen_api = apis[api_count % len(apis)]
         api_count += 1
 
-        if api_count % RATE_LIMIT == 1:
+        if api_count % (RATE_LIMIT * len(apis)) == 1:
             begin_timestamp = time.time()
 
-        elif api_count % RATE_LIMIT == 0:
+        elif api_count % (RATE_LIMIT * len(apis)) == 0:
             end_timestamp = time.time()
             elapsed_seconds = end_timestamp - begin_timestamp
             if elapsed_seconds < TIME_WINDOW + 5:
@@ -66,14 +66,14 @@ def get_tweets(apis, tweet_ids):
         try:
             print('api count: {}'.format(api_count))
             status_list = chosen_api.statuses_lookup(tweet_ids, include_entities=True, trim_user=True)
-            tweet_objs = [status._json for status in status_list]
+            tweet_jsons = [status._json for status in status_list]
             error = False
 
         except tweepy.TweepError as te:
             print('Going to sleep for 5 seconds. Tweepy error: {}'.format(te.reason))
             time.sleep(5)
 
-    return tweet_objs
+    return tweet_jsons
 
 
 def insert_tweet_ids_in_db(mongo_client):
@@ -111,14 +111,7 @@ def insert_tweet_ids_in_db(mongo_client):
 
 if __name__ == '__main__':
 
-    apis = []
-
-    for ckey, cksec, atok, atsec in zip(tcred.consumer_keys, tcred.consumer_key_secrets, tcred.access_tokens, tcred.access_token_secrets):
-        auth = tweepy.OAuthHandler(ckey, cksec)
-        auth.set_access_token(atok, atsec)
-        api = tweepy.API(auth)
-        apis.append(api)
-
+    apis = helper.get_twitter_user_apis()
     mongo_client = helper.get_mongo_client()
 
     maif_db = mongo_client['maif_db']
@@ -145,10 +138,10 @@ if __name__ == '__main__':
 
             # print(position, len(tweet_ids), tweet_ids[0], tweet_ids[-1])
 
-            tweet_objs = get_tweets(apis, tweet_ids)
+            tweet_jsons = get_tweets(apis, tweet_ids)
 
-            if tweet_objs:
-                store_tweets(tweets_col, tweet_objs)
+            if tweet_jsons:
+                store_tweets(tweets_col, tweet_jsons)
 
             tweet_id_buffer = tweet_id_buffer[len(tweet_ids):]
 

@@ -12,9 +12,6 @@ Latnya Sweeny showed that 87% of US population could be uniquely identifies base
 
 Using Selenium automation tool, email addresses from Florida Voter Records are uploaded to email contacts one at a time and then ask Twitter to import our email contacts. If the voter with the email address has a Twitter account and gives consent to find him by email address then Twitter shows the corresponding Twitter account (as of July 2019). 
 
-
-
-
 For voters of Florida we have-
 
 * | First Name | Middle Name | Age | Gender | Race | Party | City | Email
@@ -22,7 +19,6 @@ For voters of Florida we have-
 For Twitter users we have-
 
 * | Twitter Name | Twitter Handle | Tweets | Followers | Following | Email
-
 
 ## Attribute Prediction
 * Extracted NLP Features
