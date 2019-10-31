@@ -27,4 +27,6 @@ For Twitter users we have-
 * HAN - Hierarchical Attention Network
 
 ## Record Linkage
+We apply a probabilistic linkage mechnism similar to Fellegi-Sunter Expectation Maximization mechanism.
+
 
