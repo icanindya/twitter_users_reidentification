@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
+import re
 
-url_obj = urlparse('http://www.cwi.nl:80/%7Eguido/Python.html')
 
-print(url_obj.hostname)
-print(url_obj.netloc)
+    text = re.sub('https?:\/\/\S+|www\.(\w+\.)+\S*', '<URL>', text)
+   print(preprocess('this is https://www.yahoo.com this is b-: :p this is <3 +764957 @dtrump :( :-(( :*'))

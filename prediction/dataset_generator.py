@@ -7,16 +7,16 @@ from nltk.tokenize.casual import TweetTokenizer
 
 import helper
 
-ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\all_tweets.csv'
-YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\yearly_tweets.csv'
-X_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\row_creation\x_tweets.csv'
+ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
+YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
+X_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\x_tweets.csv'
 
 CSV_HEADER = ['twitter_id', 'voter_serial', 'dob', 'age', 'sex', 'race_code',
               'zip_code', 'city', 'party', 'tweet_startdate', 'tweet_enddate',
-              'num_tweets', 'num_hashtags', 'user_mentions', 'num_urls',
+              'num_tweets', 'num_hashtags', 'num_mentions', 'num_urls',
               'num_media', 'num_symbols', 'num_polls', 'text']
 
-row = 0
+record = 0
 
 
 def get_datetime(datetime_str):
@@ -26,7 +26,7 @@ def get_datetime(datetime_str):
 
 def date_difference_days(datetime1, datetime2):
 
-    return (datetime1 - datetime2).days
+    return abs((datetime1 - datetime2).days)
 
 
 def date_difference_years(datetime1, datetime2):
@@ -53,8 +53,17 @@ def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
                         voter['age'], voter['sex'], voter['race_code'],
                         voter['zip_code'], voter['city'], voter['party']]
 
-    tweets = list(map(lambda x: x['text'].replace('\0', ''), tweet_obj_list[begin_index: end_index + 1]))
-    text = ' '.join(tweets)
+    tweets = [x['text'].replace('\0', '') for x in tweet_obj_list[begin_index: end_index + 1]]
+
+    eot_tweets = []
+
+    for tweet in tweets:
+        if tweet.endswith(('.', '!', '?')) is False:
+            eot_tweets.append(tweet + '.')
+        else:
+            eot_tweets.append(tweet)
+
+    text = ' '.join(eot_tweets)
 
     tweets_metadata = defaultdict(int)
 
@@ -85,18 +94,18 @@ def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
 
     tweets_attributes = [tweet_startdate, tweet_enddate,
                          str(tweets_metadata['num_tweets']), str(tweets_metadata['num_hashtags']),
-                         str(tweets_metadata['user_mentions']), str(tweets_metadata['num_urls']),
+                         str(tweets_metadata['num_mentions']), str(tweets_metadata['num_urls']),
                          str(tweets_metadata['num_media']), str(tweets_metadata['num_symbols']),
                          str(tweets_metadata['num_polls']), text]
 
-    csv_row = voter_attributes + tweets_attributes
+    csv_record = voter_attributes + tweets_attributes
 
-    global row
-    row += 1
-    if row % 100 == 0:
-        print('row {}'.format(row))
+    global record
+    record += 1
+    if record % 100 == 0:
+        print('record {}'.format(record))
 
-    return csv_row
+    return csv_record
 
 
 def gen_ds_all_tweets():
@@ -146,7 +155,7 @@ def gen_ds_yearly_tweets():
             voter = voters_col.find_one({'serial': voter_serial})
             voter['twitter_id'] = twitter_id
 
-            tweet_objs = tweets_col.find({'user.id_str': twitter_id, 'retweeted_status': {'$exists': False}})
+            tweet_objs = tweets_col.find({'user.id_str': twitter_id, 'retweeted_status': {'$exists': False}}).sort([('id', 1)])
             tweet_obj_list = list(tweet_objs)
 
             end_index = len(tweet_obj_list) - 1

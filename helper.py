@@ -3,11 +3,45 @@ import twitter_credentials as tcred
 import urllib
 import pymongo
 import tweepy
+import csv
+import sys
+import re
 from datetime import datetime, timedelta
-
+from nltk.tokenize.casual import TweetTokenizer
+from nltk.corpus import stopwords
 
 mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
 mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
+
+stopwords = set(stopwords.words('english'))
+
+punctuation_list = {'.', ',', '?', '!', '\'', '"', ':', ';', '-', '–'}
+special_list = {'`', '~', '@', '#', '$', '%', '^', '&', '+', '*', '/', '=',
+                '>', '<', '(', ')', '{', '}', '[', ']', '|', '\\'}
+other_sym_list = {'...', '…', '’', '..', '“', '”'}
+
+stop_url_symbol_list = stopwords.union(punctuation_list).union(special_list).union(other_sym_list).union({'#url'})
+
+class CustomTweetTokenizer(TweetTokenizer):
+
+    def __init__(self, preserve_case=True, reduce_len=False, strip_handles=False, convert_urls=True):
+        super().__init__(preserve_case=preserve_case,
+                         reduce_len=reduce_len,
+                         strip_handles=strip_handles)
+        self.convert_urls = convert_urls
+
+    @staticmethod
+    def convert_url(token):
+        if token.startswith('http://') or token.startswith('https://'):
+            return '#URL'
+        return token
+
+    def tokenize(self, text):
+        tokens = super().tokenize(text)
+        if self.convert_urls:
+            return [self.convert_url(token) for token in tokens]
+        else:
+            return tokens
 
 
 def get_twitter_user_apis():
@@ -24,8 +58,21 @@ def get_twitter_user_apis():
     return apis
 
 
+def get_twitter_user_auths():
+    ''' application-user apis '''
+    auths = []
+
+    for ckey, cksec, atok, atsec in zip(tcred.consumer_keys, tcred.consumer_key_secrets,
+                                        tcred.access_tokens, tcred.access_token_secrets):
+        auth = tweepy.OAuthHandler(ckey, cksec)
+        auth.set_access_token(atok, atsec)
+        auths.append(auth)
+
+    return auths
+
+
 def get_twitter_app_apis():
-    ''' application-oonly apis'''
+    ''' application-only apis'''
     apis = []
 
     for ckey, cksec in zip(tcred.consumer_keys, tcred.consumer_key_secrets):
@@ -94,8 +141,40 @@ def is_handle(text):
     return text.startswith('@')
 
 
+def set_csv_field_size_limit():
+    maxInt = sys.maxsize
+
+    while True:
+        # decrease the maxInt value by factor 10
+        # as long as the OverflowError occurs.
+
+        try:
+            csv.field_size_limit(maxInt)
+            break
+        except OverflowError:
+            maxInt = int(maxInt / 10)
+
+
 UPPERCASE_ALPHABET = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
                       'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
                       'Y', 'Z']
 
 EXTENDED_ALPHABET = open(r'D:\Data\Linkage\FL\FL18\lexicons\top_unicodes.txt', 'r', encoding='utf-8').readline().split()
+
+set_csv_field_size_limit()
+
+
+def stop_or_mention(token):
+
+    if token.lower() in stopwords or token.startswith('@'):
+        return True
+    return False
+
+
+def stop_mention_url_or_symbol(token):
+
+    token = token.lower()
+
+    if token in stop_url_symbol_list or token.startswith('@'):
+        return True
+    return False

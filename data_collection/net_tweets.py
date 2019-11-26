@@ -2,6 +2,7 @@ import datetime
 import time
 import tweepy
 import helper
+import sys
 
 
 RATE_LIMIT = 1500
@@ -10,8 +11,8 @@ api_count = 0
 begin_timestamp = 0
 end_timestamp = 0
 
-ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\all_tweets\all_tweets.txt'
-ALL_USERS_PATH = r'D:\Data\Linkage\FL\FL18\users\all_users.txt'
+NET_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\all_tweets\network_tweets.txt'
+NET_USERS_PATH = r'D:\Data\Linkage\FL\FL18\users\network_users.txt'
 
 
 def update_index(index_col, position, max_tweet_id):
@@ -32,9 +33,9 @@ def get_index(index_col):
     return index
 
 
-def insert_tweets(tweets_col, tweet_jsons):
+def store_tweets(nettweets_col, tweet_jsons):
 
-    tweets_col.insert_many(tweet_jsons)
+    nettweets_col.insert_many(tweet_jsons)
 
 
 def get_tweets(apis, curr_position, user_id, max_tweet_id, include_rts):
@@ -87,26 +88,28 @@ def get_tweets(apis, curr_position, user_id, max_tweet_id, include_rts):
 
 if __name__ == '__main__':
 
+    mod = int(sys.argv[1])
+
     apis = helper.get_twitter_app_apis()
+    apis = [api for i, api in enumerate(apis) if i % 5 == mod]
+
     mongo_client = helper.get_mongo_client()
     twitter_db = mongo_client['twitter']
-    tweets_col = twitter_db['new_tweets']
-    gt_col = twitter_db['ground_truths']
-    index_col = twitter_db['new_tweets_index']
+    nettweets_col = twitter_db['net_tweets']
+    index_col = twitter_db['net_tweets_index_{}'.format(mod)]
 
     user_ids = []
 
-    gts = gt_col.find({})
-    for gt in gts:
-        user_ids.append(gt['twitter_id'])
-
-    user_ids.sort()
+    with open(NET_USERS_PATH, 'r') as rf:
+        for i, line in enumerate(rf):
+            if (i <= 874580 or i > 3763778) and i % 5 == mod:
+                user_ids.append(line.strip())
 
     index = get_index(index_col)
     position = index['position']
     max_tweet_id = index['max_tweet_id']
 
-    with open(ALL_TWEETS_PATH, 'a', encoding='utf-8') as wf:
+    with open(NET_TWEETS_PATH, 'a', encoding='utf-8') as wf:
 
         curr_position = position - 1
 
@@ -117,17 +120,38 @@ if __name__ == '__main__':
             first_call = True
             tweet_objs = []
 
-            while first_call or len(tweet_objs) > 0:
-                tweet_objs = get_tweets(apis, curr_position, user_id, max_tweet_id, True)
-                first_call = False
+            # while first_call or len(tweet_objs) > 0:
 
-                if tweet_objs:
-                    tweet_jsons = [tweet_obj._json for tweet_obj in tweet_objs]
-                    insert_tweets(tweets_col, tweet_jsons)
+            if max_tweet_id != 0:
+                max_tweet_id = 0
+                continue
 
-                    max_tweet_id = tweet_objs[-1].id - 1
+            tweet_objs = get_tweets(apis, curr_position, user_id, max_tweet_id, False)
+            first_call = False
+
+            if tweet_objs:
+
+                tweet_jsons = [tweet_obj._json for tweet_obj in tweet_objs if tweet_obj.retweeted is False]
+                store_tweets(nettweets_col, tweet_jsons)
+
+                # tweets = [tweet_obj.text for tweet_obj in tweet_objs if tweet_obj.retweeted is False]
+                #
+                # for tweet in tweets:
+                #     if __name__ == '__main__':
+                #         tweet = tweet.replace('\0', '')\
+                #             .replace('\r\n', ' ')\
+                #             .replace('\r', ' ')\
+                #             .replace('\n', ' ')\
+                #             .replace('\f', ' ')
+                #
+                #     wf.write('{}\n'.format(tweet))
+                #
+                # wf.flush()
+
+                max_tweet_id = tweet_objs[-1].id - 1
 
                 update_index(index_col, curr_position, max_tweet_id)
 
             max_tweet_id = 0
 
+# position without json 874580
