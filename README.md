@@ -1,4 +1,4 @@
-# Reidentifying Twitter Users
+# Re-identification of Twitter Users Using Prediction-based Record Linkage
 This project aims to reveal the the real identities of Twitter users using US Voter Registration Records.
 
 ## Methodology
