@@ -3,8 +3,6 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
 
-from nltk.tokenize.casual import TweetTokenizer
-
 import helper
 
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'

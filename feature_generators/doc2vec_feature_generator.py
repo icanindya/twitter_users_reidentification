@@ -9,6 +9,7 @@ D2V_EMBEDDING_SIZE = 100
 
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
+TRAINER_TWEET_TOKENS_PATH = r"D:\Data\Linkage\FL\FL18\ml_datasets\trainer_tweet_tokens.csv1"
 
 
 def get_model(model_tokens_path, model_path):
@@ -32,7 +33,7 @@ def get_model(model_tokens_path, model_path):
         print('started model generation')
         start = time.time()
 
-        model = gensim.models.doc2vec.Doc2Vec(documents=Corpus(), vector_size=D2V_EMBEDDING_SIZE, window=4, iter=20, min_count=100, workers=4)
+        model = gensim.models.doc2vec.Doc2Vec(documents=Corpus(), vector_size=D2V_EMBEDDING_SIZE, iter=20, window=4, min_count=100, workers=4)
         model.save(model_path)
 
         end = time.time()
@@ -43,25 +44,27 @@ def get_model(model_tokens_path, model_path):
 
 def vectorize_docs(model, dataset_tokens_path, features_path):
 
-    print('started records generation')
-    start = time.time()
+    if not os.path.exists(features_path):
 
-    with open(features_path, 'w', newline='', encoding='utf-8') as wf:
-        csv_writer = csv.writer(wf, delimiter=',')
-        csv_writer.writerow(['d2v-{}'.format(i) for i in range(D2V_EMBEDDING_SIZE)])
+        print('started records generation')
+        start = time.time()
 
-        with open(dataset_tokens_path, 'r', encoding='utf-8') as rf:
-            csv_reader = csv.DictReader(rf, delimiter=',')
+        with open(features_path, 'w', newline='', encoding='utf-8') as wf:
+            csv_writer = csv.writer(wf, delimiter=',')
+            csv_writer.writerow(['d2v-{}'.format(i) for i in range(D2V_EMBEDDING_SIZE)])
 
-            for i, row in enumerate(csv_reader):
-                if i % 100 == 0:
-                    print('write csv row', i)
-                tokens = [x.lower() for x in row['tokens_joined'].split() if not helper.stop_or_mention(x)]
-                d2v_vector = [str(x) for x in model.infer_vector(tokens)]
-                csv_writer.writerow(d2v_vector)
+            with open(dataset_tokens_path, 'r', encoding='utf-8') as rf:
+                csv_reader = csv.DictReader(rf, delimiter=',')
 
-    end = time.time()
-    print('generated {} records in {} sec(c)'.format(i + 1, (end - start)))
+                for i, row in enumerate(csv_reader):
+                    if i % 100 == 0:
+                        print('write csv row', i)
+                    tokens = [x.lower() for x in row['tokens_joined'].split() if not helper.stop_or_mention(x)]
+                    d2v_vector = [str(x) for x in model.infer_vector(tokens)]
+                    csv_writer.writerow(d2v_vector)
+
+        end = time.time()
+        print('generated {} records in {} sec(c)'.format(i + 1, (end - start)))
 
 
 if __name__ == '__main__':
@@ -84,4 +87,7 @@ if __name__ == '__main__':
     features_path = file_name + '_d2v_{}_features.csv'.format(D2V_EMBEDDING_SIZE)
 
     model = get_model(model_tokens_path, model_path)
-    vectorize_docs(dataset_tokens_path, model_path, features_path)
+    vectorize_docs(model, dataset_tokens_path, features_path)
+
+
+# accuracy: sex 78%, race 73% when all singular tweets, iter 20

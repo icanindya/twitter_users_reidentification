@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 from nltk.tokenize.casual import TweetTokenizer
 from nltk.corpus import stopwords
 
+random_seed = 3613
+test_percentage = 0.20
+
 mongo_user = urllib.parse.quote_plus(mcred.USERNAME)
 mongo_pass = urllib.parse.quote_plus(mcred.PASSWORD)
 
@@ -21,6 +24,7 @@ special_list = {'`', '~', '@', '#', '$', '%', '^', '&', '+', '*', '/', '=',
 other_sym_list = {'...', '…', '’', '..', '“', '”'}
 
 stop_url_symbol_list = stopwords.union(punctuation_list).union(special_list).union(other_sym_list).union({'#url'})
+
 
 class CustomTweetTokenizer(TweetTokenizer):
 
@@ -88,9 +92,28 @@ def get_mongo_client():
     return mongo_client
 
 
+def get_text_race_code(code):
+    if code == 1:
+        return 'IA'
+    elif code == 2:
+        return 'AP'
+    elif code == 3:
+        return 'BL'
+    elif code == 4:
+        return 'HI'
+    elif code == 5:
+        return 'WH'
+    elif code == 6:
+        return 'OT'
+    elif code == 7:
+        return 'MU'
+    elif code == 9:
+        return 'UN'
+
+
 def get_maif_age_label(age):
     if age <= 18:
-        return '<=18'
+        return '18-'
     elif 19 <= age <= 22:
         return '19-22'
     elif 23 <= age <= 33:
@@ -98,7 +121,13 @@ def get_maif_age_label(age):
     elif 34 <= age <= 45:
         return '34-45'
     else:
-        return '>=46'
+        return '46+'
+
+
+def get_short_party(party):
+
+    return party[:2]
+
 
 
 def date_difference_years(datetime1, datetime2):
@@ -164,8 +193,19 @@ EXTENDED_ALPHABET = open(r'D:\Data\Linkage\FL\FL18\lexicons\top_unicodes.txt', '
 set_csv_field_size_limit()
 
 
-def stop_or_mention(token):
+def mention_or_newline(token):
+    if token.startswith('@') or token in ['\r', '\n']:
+        return True
+    return False
 
+
+def mention(token):
+    if token.startswith('@'):
+        return True
+    return False
+
+
+def stop_or_mention(token):
     if token.lower() in stopwords or token.startswith('@'):
         return True
     return False
@@ -178,3 +218,5 @@ def stop_mention_url_or_symbol(token):
     if token in stop_url_symbol_list or token.startswith('@'):
         return True
     return False
+
+

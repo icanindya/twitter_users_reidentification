@@ -5,7 +5,7 @@ import random
 
 LINKAGE_DSB = r'D:\Data\Linkage\FL\FL18\linkage\linkage_dsb_agegrouped.csv'
 LINKAGE_DSB_DIST = r'D:\Data\Linkage\FL\FL18\linkage\linkage_dsb_agegrouped_dist.txt'
-attributes = ['gender', 'yob', 'race', 'city', 'party']
+attributes = ['gender', 'yob', 'race', 'party']
 
 # dfb = pd.read_csv(LINKAGE_DSB, header=0, index_col=None)
 # series = dfb.groupby(attributes).index.nunique()

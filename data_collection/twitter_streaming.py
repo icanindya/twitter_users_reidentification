@@ -46,9 +46,11 @@ class TwitterListener(StreamListener):
 if __name__ == '__main__':
 
     option = 'lang'
+    api_index = 1
 
     if len(sys.argv) > 1:
         option = sys.argv[1]
+        api_index = int(sys.argv[2])
 
     top_1grams = []
 
@@ -61,7 +63,7 @@ if __name__ == '__main__':
     listener = TwitterListener()
     apis = helper.get_twitter_user_auths()
 
-    stream = Stream(apis[6], listener)
+    stream = Stream(apis[api_index], listener)
     #
     if option == 'geo':
         stream.filter(locations=[-123.62, 32.94, -66.82, 47.20])
