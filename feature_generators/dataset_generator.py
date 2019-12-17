@@ -9,8 +9,8 @@ ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
 X_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\x_tweets.csv'
 
-CSV_HEADER = ['twitter_id', 'voter_serial', 'dob', 'age', 'sex', 'race_code',
-              'zip_code', 'city', 'party', 'tweet_startdate', 'tweet_enddate',
+CSV_HEADER = ['twitter_id', 'voter_serial', 'dob', 'age', 'sex', 'race',
+              'zip', 'city', 'party', 'tweet_startdate', 'tweet_enddate',
               'num_tweets', 'num_hashtags', 'num_mentions', 'num_urls',
               'num_media', 'num_symbols', 'num_polls', 'text']
 

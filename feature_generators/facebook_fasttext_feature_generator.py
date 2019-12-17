@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     file_name, file_ext = os.path.splitext(ALL_TWEETS_PATH)
     fb_ftext_input_path = file_name + '_fb_ftext_input.txt'
-    model_path = file_name + '_fb_ftext_{}_combined.model'
+    model_path = file_name + '_fb_ftext_{}_combined.model'.format(FASTEXT_EMBEDDING_SIZE)
 
     file_name, file_ext = os.path.splitext(dataset_path)
     dataset_tokens_path = file_name + '_tokens.csv'

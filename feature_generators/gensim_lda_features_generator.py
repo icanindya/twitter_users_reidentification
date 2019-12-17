@@ -129,7 +129,7 @@ if __name__ == '__main__':
     file_name, file_ext = os.path.splitext(dataset_path)
     dataset_tokens_path = file_name + '_tokens.csv'
 
-    features_path = file_name + '_lda_{}_features.csv'.format(LDA_FEATURES_SIZE)
+    features_path = file_name + '_lda_{}_{}_features.csv'.format(LDA_FEATURES_SIZE, mode)
 
     model = get_model(model_tokens_path, model_path)
 

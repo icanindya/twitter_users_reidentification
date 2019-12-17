@@ -18,7 +18,7 @@ ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
 NUM_TWEETS = 50
 SELECTED_TWITTER_IDS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\twitter_ids_{}_tweets.csv'.format(NUM_TWEETS)
-PREDICTION_PATH = r'D:\Data\Linkage\FL\FL18\predictions\{}_{}_{}.csv'
+PREDICTION_PATH = r'D:\Data\Linkage\FL\FL18\results\predictions\{}_{}_{}.csv'
 
 TOP_1GRAMS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\top_1grams.txt'
 TOP_2GRAMS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\top_2grams.txt'
@@ -83,10 +83,10 @@ def neural_net(X_train, y_train, X_test, y_test, output_dim, hidden_len):
 
 def random_forest(X_train, y_train, X_test, y_test):
 
-    model = RandomForestClassifier(n_estimators=500, max_depth=10, random_state=helper.random_seed)
+    model = RandomForestClassifier(n_estimators=500, max_depth=None, random_state=helper.random_seed)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
+    accuracy = accuracy_score(y_test, y_pred) * 100
 
     return accuracy, y_pred
 
@@ -110,9 +110,9 @@ if len(sys.argv) > 1:
     features_list = [features]
 
 else:
-    attribute_list = ['sex', 'race_code', 'party']
-    algo_list = ['neural-network']
-    features_list = [['doc2vec']]
+    attribute_list = ['sex', 'race', 'party']
+    algo_list = ['random-forest']
+    features_list = [['ngrams']]
 
 ids_df = pd.read_csv(SELECTED_TWITTER_IDS_PATH, header=0)
 test_ids_df = ids_df.sample(frac=helper.test_percentage, random_state=helper.random_seed)
@@ -120,7 +120,7 @@ test_ids = test_ids_df['twitter_ids'].tolist()
 train_ids_df = ids_df.drop(test_ids_df.index)
 train_ids = train_ids_df['twitter_ids'].tolist()
 
-with open(r'D:\new_result.txt', 'a', encoding='utf-8') as wf:
+with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8') as wf:
 
     for features in features_list:
         for algo in algo_list:
@@ -138,8 +138,8 @@ with open(r'D:\new_result.txt', 'a', encoding='utf-8') as wf:
                 else:
                     dataset_path = ALL_TWEETS_PATH
                     df = pd.read_csv(dataset_path, header=0, usecols=['twitter_id', attribute])
-                    if attribute == 'race_code':
-                        df['race_code'] = df['race_code'].apply(helper.get_text_race_code)
+                    if attribute == 'race':
+                        df['race'] = df['race'].apply(helper.get_text_race_code)
                     df_list.append(df)
 
                 file_name, file_ext = os.path.splitext(dataset_path)
@@ -161,7 +161,7 @@ with open(r'D:\new_result.txt', 'a', encoding='utf-8') as wf:
                     df_list.append(pd.read_csv(features_path, header=0))
 
                 if 'lda' in features:
-                    features_path = file_name + '_lda_60_features.csv'
+                    features_path = file_name + '_lda_60_doc_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
                 if 'ngrams' in features:
@@ -210,22 +210,23 @@ with open(r'D:\new_result.txt', 'a', encoding='utf-8') as wf:
                 cm_df = pd.DataFrame(cm, index=label_binerizer.classes_, columns=label_binerizer.classes_)
                 cm_df.sort_index(axis=1, inplace=True)
 
-                print('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
+                # print('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
                 print('accuracy: {:.2f}\n'.format(accuracy))
                 print('confusion matrix:\n')
                 print('{}\n\n'.format(str(cm_df)))
 
-                # wf.write('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
-                # wf.write('accuracy: {:.2f}\n'.format(accuracy))
-                # wf.write('confusion matrix:\n')
-                # wf.write('{}\n\n'.format(str(cm_df)))
-                # wf.flush()
+                wf.write('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
+                wf.write('accuracy: {:.2f}\n'.format(accuracy))
+                wf.write('confusion matrix:\n')
+                wf.write('{}\n\n'.format(str(cm_df)))
+                wf.flush()
 
                 # save_predictions(attribute, algo, features, y_pred_inv)
 
 
 
-
+# 82.63 75.54, 52.13
+#ngram: 68, 22
 
 
 
