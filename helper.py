@@ -129,7 +129,6 @@ def get_short_party(party):
     return party[:2]
 
 
-
 def date_difference_years(datetime1, datetime2):
     return int((datetime1 - datetime2).days // 365.2425)
 
@@ -219,4 +218,11 @@ def stop_mention_url_or_symbol(token):
         return True
     return False
 
+
+def jaccard_similarity(list1, list2):
+    if len(list1) == 0 or len(list2) == 0:
+        return 0
+    intersection = len(list(set(list1).intersection(list2)))
+    union = (len(list1) + len(list2)) - intersection
+    return float(intersection) / union
 

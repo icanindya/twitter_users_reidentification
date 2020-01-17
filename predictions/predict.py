@@ -14,6 +14,10 @@ from nltk.stem import PorterStemmer
 from nltk.util import ngrams
 import joblib
 
+sys.path.append(r'D:\Projects\Python\AttributePrediction\external_projects\TextClassification')
+from models.keras_vdcnn_model import VDCNN
+from models.config import Config
+
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
 NUM_TWEETS = 50
@@ -58,6 +62,20 @@ def process_text(row):
     twograms = [' '.join(ngram) for ngram in ngrams(stems, 2)]
 
     return onegrams + twograms
+
+
+def vdcnn(X_train, y_train, X_test, y_test):
+
+    model = VDCNN(Config())
+
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=128)
+
+    scores = model.evaluate(X_test, y_test)
+    accuracy = scores[1] * 100
+    y_pred = model.predict(X_test)
+
+    return accuracy, y_pred
 
 
 def neural_net(X_train, y_train, X_test, y_test, output_dim, hidden_len):
@@ -164,11 +182,15 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
                     features_path = file_name + '_lda_60_doc_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
+                if 'text' in features:
+                    features_path = file_name + '_tokens.csv'
+                    df_list.append(pd.read_csv(features_path, header=0))
+
                 if 'ngrams' in features:
-                    # df_list.append(pd.read_csv(dataset_path, header=0, usecols=['text']))
                     model_path = file_name + '_tfidf_20000.model'
                     tfidf = joblib.load(model_path)
                     df_list.append(pd.DataFrame(tfidf.todense()))
+
 
                 df = pd.concat(df_list, axis=1)
 
@@ -188,9 +210,10 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
                 #     joblib.dump(X_train, file_name + '_ngram_train_{}_features.bin'.format(len(top_grams)))
                 #     joblib.dump(X_test, file_name + '_ngram_test_{}_features.bin'.format(len(top_grams)))
 
-                scaler = StandardScaler()
-                X_train = scaler.fit_transform(X_train)
-                X_test = scaler.transform(X_test)
+                if 'text' not in features:
+                    scaler = StandardScaler()
+                    X_train = scaler.fit_transform(X_train)
+                    X_test = scaler.transform(X_test)
 
                 y = np.concatenate((y_train, y_test))
                 label_binerizer = LabelBinarizer().fit(y)
@@ -200,6 +223,9 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
 
                 if algo == 'neural-network':
                     accuracy, y_pred = neural_net(X_train, y_train, X_test, y_test, output_dim=len(label_binerizer.classes_), hidden_len=1)
+
+                elif algo == 'vdcnn':
+                    accuracy, y_pred = vdcnn(X_train, y_train, X_test, y_test)
 
                 elif algo == 'random-forest':
                     accuracy, y_pred = random_forest(X_train, y_train, X_test, y_test)

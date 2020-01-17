@@ -88,7 +88,7 @@ def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
             tweets_metadata['num_polls'] += len(tweet_obj['entities']['polls'])
 
     tweet_startdate = get_datetime(tweet_obj_list[begin_index]['created_at']).strftime('%m/%d/%Y')
-    tweet_enddate = get_datetime(tweet_obj_list[begin_index]['created_at']).strftime('%m/%d/%Y')
+    tweet_enddate = get_datetime(tweet_obj_list[end_index]['created_at']).strftime('%m/%d/%Y')
 
     tweets_attributes = [tweet_startdate, tweet_enddate,
                          str(tweets_metadata['num_tweets']), str(tweets_metadata['num_hashtags']),

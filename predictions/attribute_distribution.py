@@ -27,7 +27,7 @@ SELECTED_TWITTER_IDS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\twitter_ids_{}
 
 df = pd.read_csv(ALL_TWEETS_PATH, header=0)
 df['sex'] = df['sex'].apply(lambda x: 'F' if x not in ['M', 'F'] else x)
-df['race_code'] = df['race_code'].apply(helper.get_text_race_code)
+df['race'] = df['race'].apply(helper.get_text_race_code)
 df['party'] = df['party'].apply(helper.get_short_party)
 
 ids_df = pd.read_csv(SELECTED_TWITTER_IDS_PATH, header=0)
