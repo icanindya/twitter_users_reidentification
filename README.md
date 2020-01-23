@@ -1,6 +1,10 @@
 # Re-identification of Twitter Users Using Prediction-based Record Linkage
 This project aims to reveal the the real identities of Twitter users using US Voter Registration Records.
 
+## Summary
+
+n this project, I try to find the real world identities of Twitter users. At first, using a data leakage vulnerability in Twitter web interface I collect the real identities of 200K Twitter users and track them in US voter registration data. Then using the content and network information of these users, I build ML/NLP models to predict personal attributes (age-group, sex, race, party affiliation, location). Then using the predicted attributes and Twitter name and handle, I link an unknown Twitter user with his/her voter registration entry using probabilistic record linkage models. Thus I find many sensitive information e.g., phone number, address, email address, family members etc. about the user.
+
 ## Methodology
 As of July 2019, Twitter gives an user the ability to import his email contacts book and see the corresponding Twitter profiles which registered using that email addresses in the contacts book, provided that the profiles give consent of finding them via email address. This seemingly innocuous feature can be exploited to enumerate the Twitter profiles corresponding to a database of millions of email address. We develop a framework to efficiently 
 
