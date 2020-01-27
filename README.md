@@ -10,9 +10,11 @@ As of July 2019, Twitter gives an user the ability to import his email contacts 
 
 However, for many peoples' email addresses may not be available in the database. 
 
-Latnya Sweeny showed that 87% of US population could be uniquely identifies based on their DoB, Sex & ZIP code. Inspired by that idea, here we would like to predict age, sex, race, political afficiliation and  
+Latnya Sweeny showed that 87% of US population could be uniquely identifies based on their DoB, Sex & ZIP code. Inspired by that idea, here we would like to predict age, sex, race, political afficiliation and city information. 
 
 ## Data Collection
+
+The following data leakage vulnerability was exclusively available in Twitter Web interface. Twitter does not provide API for collecting this kind of information.
 
 Using Selenium automation tool, email addresses from Florida Voter Records are uploaded to email contacts one at a time and then ask Twitter to import our email contacts. If the voter with the email address has a Twitter account and gives consent to find him by email address then Twitter shows the corresponding Twitter account (as of July 2019). 
 
@@ -25,8 +27,11 @@ For Twitter users we have-
 * | Twitter Name | Twitter Handle | Tweets | Followers | Following | Email
 
 ## Attribute Prediction
-* Extracted NLP Features
-* Doc2Vec + DNN
+Used the following models-
+
+* Extracted 64 NLP Features
+* Doc2Vec, fastText, GloVe features
+* LDA topic modeling features
 * VDCNN - Very Deep Convolutional Neural Network
 * HAN - Hierarchical Attention Network
 
