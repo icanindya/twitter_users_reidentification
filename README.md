@@ -14,7 +14,7 @@ Latnya Sweeny showed that 87% of US population could be uniquely identifies base
 
 ## Data Collection
 
-The following data leakage vulnerability was exclusively available in Twitter Web interface. Twitter does not provide API for collecting this kind of information.
+* The following data leakage vulnerability was exclusively available in Twitter Web interface. Twitter does not provide API for collecting this kind of information.
 
 Using Selenium automation tool, email addresses from Florida Voter Records are uploaded to email contacts one at a time and then ask Twitter to import our email contacts. If the voter with the email address has a Twitter account and gives consent to find him by email address then Twitter shows the corresponding Twitter account (as of July 2019). 
 
