@@ -3,7 +3,7 @@ This project aims to reveal the the real identities of Twitter users using US Vo
 
 ## Methodology
 
-At first, by exploiting a data leakage vulnerability in Twitter web interface 200K Twitter users are tracked in US Voter Registration data, which contains their real identities and personal attributes. Using the content and network information i.e., tweets, friends, followers etc. of these users, ML/NLP models are built to predict some of the personal attributes specifically age-group, sex, race, party affiliation, city. Finally, by utilizing these predicted attributes along with display name and handle, an unknown Twitter user is linked with his voter registration entry using probabilistic record linkage models. Each linkage "match" reveals some sensitive information e.g., phone number, address, email address, family members etc. of a Twitter user. 
+At first, by exploiting a data leakage vulnerability in Twitter web interface 200K Twitter users are tracked in US Voter Registration data, which contains their real identities and personal attributes. Using the content and network information i.e., tweets, friends, followers etc. of these users, ML/NLP models are built to predict some of the personal attributes specifically age-group, sex, race, party affiliation and city. Finally, by utilizing these predicted attributes along with display name and handle, an unknown Twitter user is linked with his voter registration entry using probabilistic record linkage models. Each linkage "match" reveals some sensitive information e.g., phone number, address, email address, family members etc. of a Twitter user. 
 
 ## Ground Truth Collection
 
@@ -19,15 +19,13 @@ Twitter gives an user the ability to import contact list from an email service a
 
 * Content & network information of 200K linked Twitter users:
 
-  - display name, Twitter handle, tweets and metadata, followers, friends
+  - Display name, Twitter handle, tweets and metadata, followers, friends
   - Tweets of direct followers and friends
   
 * The total data size is more than 500 GB in MongoDB
   
 
 ## Attribute Prediction
-
-Used the following models-
 
 * Stemmed word n-grams: top 10K unigrams, top 10K bigrams
 * 64 NLP Features
@@ -38,6 +36,7 @@ Used the following models-
 
 ## Record Linkage
 
-We apply a probabilistic linkage mechnism similar to Fellegi-Sunter Expectation Maximization mechanism.
+* Several deterministic record linkage models
+* Fellegi-Sunter Expectation Maximization model 
 
 
