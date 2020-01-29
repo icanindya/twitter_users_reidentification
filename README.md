@@ -1,46 +1,43 @@
 # Re-identification of Twitter Users Using Prediction-based Record Linkage
 This project aims to reveal the the real identities of Twitter users using US Voter Registration Records.
 
-## Summary
+## Methodolofy
 
-In this project, I try to find the real world identities of Twitter users. At first, by exploiting a data leakage vulnerability in Twitter web interface I collect the real identities of 200K Twitter users and track them in US voter registration data. Then using the content and network information of these users, I build ML/NLP models to predict personal attributes (age-group, sex, race, party affiliation, location). Then using these predicted attributes along with Twitter name and handle, I link an unknown Twitter user with his/her voter registration entry using probabilistic record linkage models. Thus I find many sensitive information e.g., phone number, address, email address, family members etc. about the user. 
+At first, by exploiting a data leakage vulnerability in Twitter web interface 200K Twitter users are tracked in US Voter Registration data, which contains their real identities and personal attributes. Using the content and network information i.e., tweets, friends, followers etc. of these users, ML/NLP models are built to predict some of the personal attributes specifically age-group, sex, race, party affiliation, city. Finally, by utilizing these predicted attributes along with display name and handle, an unknown Twitter user is linked with his voter registration entry using probabilistic record linkage models. Each linkage "match" reveals some sensitive information e.g., phone number, address, email address, family members etc. of a Twitter user. 
 
-## Methodology
-**The following data leakage vulnerability was exclusively available in Twitter Web interface till July 2019. Twitter never provided API support for collecting this kind of information.**
+## Ground Truth Collection
 
-Twitter gives an user the ability to import his email contacts book and see the corresponding Twitter profiles which registered using that email addresses in the contacts book, provided that the profiles give consent of finding them via email address. This seemingly innocuous feature can be exploited to enumerate the Twitter profiles corresponding to a database of millions of email address. We develop a framework to do this task efficiently. 
+**Note**: *The following data leakage vulnerability was exclusively available in Twitter Web interface till July 2019. Twitter never provided API support for collecting this kind of information.*
 
-**However, many peoples' email addresses may not be available in the database. How about we use the previous leaked data as ground truth for predicting personal attributes using ML/NLP models and link based on those?**
-
-Latnya Sweeny showed that 87% of US population could be uniquely identified based on the combination of DoB, Sex & ZIP code. Inspired by that idea, here we would like to predict age, sex, race, political affiliation and city information and use those predicted attributes along with Twitter profile attributes (twitter_name, handle) to re-identify a Twitter user.
+Twitter gives an user the ability to import contact list from an email service and show the corresponding Twitter profiles which registered using some email address in the contact list, provided that the profiles give consent of finding them via email address. This seemingly innocuous feature can be exploited to enumerate the Twitter profiles corresponding to a database of millions of email address. We develop an automation framework to do this task efficiently and some 200K Twitter users are linked. 
 
 ## Data Collection
 
-Using Selenium automation library, email addresses from Florida Voter Records are uploaded to email contact list one at a time and then Twitter is asked to import the contact list using OAuth. If the voter with the email address has a Twitter account and gives consent to find him by email address then Twitter shows the corresponding Twitter account. Some optimizations are done and 200K Twitter users are linked.
+* Voter registration records of 14M FL voters:
 
-* For voters of Florida we have-
+  - first Name, middle Name, last name, DoB, gender, race, party, city, county, ZIP code, email address, phone number
 
-  - First Name, Middle Name, Age, Gender, Race, Party, City, Email
-  - Sensitive attributes
+* Content & network information of 200K linked Twitter users:
 
-* For Twitter users we have-
-
-  - Twitter Name, Twitter Handle, Tweets, Followers, Following, Email
-  - Tweets from direct followers and friends
+  - display name, Twitter handle, tweets and metadata, followers, friends
+  - Tweets of direct followers and friends
   
 * The total data size is more than 500 GB in MongoDB
   
 
 ## Attribute Prediction
+
 Used the following models-
 
-* Extracted 64 NLP Features
+* Stemmed word n-grams: top 10K unigrams, top 10K bigrams
+* 64 NLP Features
 * Doc2Vec, fastText, GloVe features
 * LDA topic modeling features
-* VDCNN - Very Deep Convolutional Neural Network
-* HAN - Hierarchical Attention Network
+* VDCNN - Very Deep Convolutional Neural Network ([read more](https://arxiv.org/abs/1606.01781)) 
+* HAN - Hierarchical Attention Network ([read more](https://www.aclweb.org/anthology/N16-1174/))
 
 ## Record Linkage
+
 We apply a probabilistic linkage mechnism similar to Fellegi-Sunter Expectation Maximization mechanism.
 
 
