@@ -1,6 +1,17 @@
 # Re-identification of Twitter Users Using Prediction-based Record Linkage
 This project aims to reveal the real identities of Twitter users using US Voter Registration Records. It analyses which users are at significantly more risk of identity disclosure and what approaches should be taken to mitigate the risk. 
 
+## Techologies
+
+This project uses the following technologies:
+
+* scikit-learn
+* MongoDB
+* Selenium
+* Google API
+* Twitter API
+* Matplotlib
+
 ## Methodology
 
 At first, by exploiting a data leakage vulnerability in Twitter web interface 200K Twitter users are tracked in US Voter Registration data, which contains their real identities and personal attributes. Using the content and network information i.e., tweets, friends, followers etc. of these users, ML/NLP models are built to predict some of the personal attributes specifically age-group, sex, race, party affiliation and city. Finally, by utilizing these predicted attributes along with display name and handle, an unknown Twitter user is linked with his voter registration entry using deterministic/probabilistic record linkage models. Each linkage "match" reveals some sensitive information e.g., phone number, address, email address, family members etc. of a Twitter user. 
