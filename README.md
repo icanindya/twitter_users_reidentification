@@ -35,10 +35,10 @@ As of July 2019, Twitter had a feature that would let an user to import his cont
 
 ## Attribute Prediction
 
-* Stemmed word n-grams: top 10K unigrams, top 10K bigrams
-* 64 NLP Features
-* Doc2Vec, fastText, GloVe features
-* LDA topic modeling features
+* Stemmed word n-grams: top 10K unigrams, top 10K bigrams + Random Forest
+* 64 NLP Features + Neural Net
+* Doc2Vec, fastText, GloVe features + Neural Net
+* LDA topic modeling features + Neural Net
 * VDCNN - Very Deep Convolutional Neural Network ([read more](https://arxiv.org/abs/1606.01781)) 
 * HAN - Hierarchical Attention Network ([read more](https://www.aclweb.org/anthology/N16-1174/))
 
