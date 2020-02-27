@@ -1,7 +1,7 @@
 # Re-identification of Twitter Users Using Prediction-based Record Linkage
 This project aims to reveal the real identities of Twitter users using US Voter Registration Records. It analyses which users are at significantly more risk of identity disclosure and what approaches should be taken to mitigate the risk. 
 
-## Techologies
+## Technologies
 
 This project uses the following technologies:
 
