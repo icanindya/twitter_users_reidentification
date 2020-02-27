@@ -6,7 +6,7 @@ This project aims to reveal the real identities of Twitter users using US Voter 
 This project uses the following technologies:
 
 * Machine Learning: scikit-learn
-* NLP: NLTK, gensim
+* NLP: NLTK, Gensim
 * Database: MongoDB
 * Data Scraping: Selenium, Google API, Twitter API
 * Charting: Matplotlib
