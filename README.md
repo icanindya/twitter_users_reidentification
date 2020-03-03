@@ -1,4 +1,4 @@
-# Re-identification of Twitter Users Using Prediction-based Record Linkage
+# Asssessing the Re-identification Risk of Twitter Users on US Voter Records
 This project aims to reveal the real identities of Twitter users using US Voter Registration Records. It analyses which users are at significantly more risk of identity disclosure and what approaches should be taken to mitigate the risk. 
 
 ## Technologies
@@ -35,12 +35,20 @@ As of July 2019, Twitter had a feature that would let an user to import his cont
 
 ## Attribute Prediction
 
-* Stemmed word n-grams: top 10K unigrams, top 10K bigrams + Random Forest
-* 64 NLP Features + Neural Net
-* Doc2Vec, fastText, GloVe features + Neural Net
-* LDA topic modeling features + Neural Net
-* VDCNN - Very Deep Convolutional Neural Network ([read more](https://arxiv.org/abs/1606.01781)) 
-* HAN - Hierarchical Attention Network ([read more](https://www.aclweb.org/anthology/N16-1174/))
+* Using Tweets:
+  * Stemmed word n-grams: top 10K unigrams, top 10K bigrams + Random Forest
+  * 64 NLP Features + Neural Net
+  * Doc2Vec, fastText, GloVe features + Neural Net
+  * LDA topic modeling features + Neural Net
+  * VDCNN - Very Deep Convolutional Neural Network ([read more](https://arxiv.org/abs/1606.01781)) 
+  * HAN - Hierarchical Attention Network ([read more](https://www.aclweb.org/anthology/N16-1174/))
+
+* Using Twitter name and Handle:
+  * LSTM
+  * Temporal Convolution + LSTM 
+
+* Using Network:
+  * (to be done)
 
 ## Record Linkage
 
