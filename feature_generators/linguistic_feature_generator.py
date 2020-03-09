@@ -628,5 +628,5 @@ if __name__ == '__main__':
     file_name, file_ext = os.path.splitext(dataset_path)
     tokens_path = file_name + '_tokens.csv'
 
-    features_path = file_name + '_textual_features.csv'
+    features_path = file_name + '_linguistic_features.csv'
     vectorize_docs(dataset_path, tokens_path, features_path)

@@ -29,13 +29,11 @@ def date_difference_days(datetime1, datetime2):
 
 def date_difference_years(datetime1, datetime2):
 
-    return int((datetime1 - datetime2).days // 365.2425)
+    return int(abs((datetime1 - datetime2).days) // 365.2425)
 
 
-def get_age(tweet_obj_list, begin_index, end_index, dob):
+def get_age(begin_datetime, end_datetime, dob):
 
-    begin_datetime = get_datetime(tweet_obj_list[begin_index]['created_at'])
-    end_datetime = get_datetime(tweet_obj_list[end_index]['created_at'])
     days_in_window = date_difference_days(end_datetime, begin_datetime)
     middle_datetime = begin_datetime + timedelta(days=days_in_window // 2)
     dob_datetime = datetime.strptime(dob + ' -0500', '%m/%d/%Y %z')
@@ -45,7 +43,10 @@ def get_age(tweet_obj_list, begin_index, end_index, dob):
 
 def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
 
-    voter['age'] = get_age(tweet_obj_list, begin_index, end_index, voter['dob'])
+    begin_datetime = get_datetime(tweet_obj_list[begin_index]['created_at'])
+    end_datetime = get_datetime(tweet_obj_list[end_index]['created_at'])
+
+    voter['age'] = get_age(begin_datetime, end_datetime, voter['dob'])
 
     voter_attributes = [voter['twitter_id'], voter['serial'], voter['dob'],
                         voter['age'], voter['sex'], voter['race_code'],
@@ -65,7 +66,7 @@ def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
 
     tweets_metadata = defaultdict(int)
 
-    tweets_metadata['num_tweets'] = len(tweet_obj_list)
+    tweets_metadata['num_tweets'] = end_index - begin_index + 1
 
     for tweet_obj in tweet_obj_list[begin_index: end_index + 1]:
 
@@ -87,8 +88,8 @@ def get_csv_row(voter, tweet_obj_list, begin_index, end_index):
         if 'polls' in tweet_obj['entities']:
             tweets_metadata['num_polls'] += len(tweet_obj['entities']['polls'])
 
-    tweet_startdate = get_datetime(tweet_obj_list[begin_index]['created_at']).strftime('%m/%d/%Y')
-    tweet_enddate = get_datetime(tweet_obj_list[end_index]['created_at']).strftime('%m/%d/%Y')
+    tweet_startdate = begin_datetime.strftime('%m/%d/%Y')
+    tweet_enddate = end_datetime.strftime('%m/%d/%Y')
 
     tweets_attributes = [tweet_startdate, tweet_enddate,
                          str(tweets_metadata['num_tweets']), str(tweets_metadata['num_hashtags']),

@@ -18,7 +18,7 @@ def preprocess(text):
 
     text = ''.join(c for c in text if unicodedata.category(c).startswith(('C', )) is False)
     text = ''.join(' ' if unicodedata.category(c).startswith(('Zl', 'Zp')) else c for c in text)
-    tokenizer = helper.CustomTweetTokenizer(preserve_case=False, reduce_len=False, strip_handles=True, convert_urls=True)
+    tokenizer = helper.CustomTweetTokenizer(preserve_case=False, reduce_len=False, strip_handles=True, convert_urls=True, remove_stopwords=True)
     tokens = tokenizer.tokenize(text)
     return ' '.join(tokens)
 
@@ -84,12 +84,12 @@ if __name__ == '__main__':
 
     file_name, file_ext = os.path.splitext(ALL_TWEETS_PATH)
     fb_ftext_input_path = file_name + '_fb_ftext_input.txt'
-    model_path = file_name + '_fb_ftext_{}_combined.model'.format(FASTEXT_EMBEDDING_SIZE)
+    model_path = file_name + '_fb_ftext_{}.model'.format(FASTEXT_EMBEDDING_SIZE)
 
     file_name, file_ext = os.path.splitext(dataset_path)
     dataset_tokens_path = file_name + '_tokens.csv'
 
-    features_path = file_name + '_fb_ftext_{}_combined_features.csv'.format(FASTEXT_EMBEDDING_SIZE)
+    features_path = file_name + '_fb_ftext_{}_features.csv'.format(FASTEXT_EMBEDDING_SIZE)
 
     model = get_model(fb_ftext_input_path=fb_ftext_input_path, model_path=model_path)
 

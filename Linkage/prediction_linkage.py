@@ -19,7 +19,7 @@ else:
     dataset_path = ALL_TWEETS_PATH
     df = pd.read_csv(dataset_path, header=0, usecols=['twitter_id', attribute])
     if attribute == 'race_code':
-        df['race_code'] = df['race_code'].apply(helper.get_text_race_code)
+        df['race_code'] = df['race_code'].apply(helper.get_short_race)
     df_list.append(df)
 
 df = pd.concat(df_list, axis=1)

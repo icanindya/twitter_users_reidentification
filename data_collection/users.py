@@ -68,8 +68,8 @@ def get_indices(mongo_client):
 if __name__ == '__main__':
 
     # application-user authentication
-    auth = tweepy.OAuthHandler(tcred.CONSUMER_KEY, tcred.CONSUMER_KEY_SECRET)
-    auth.set_access_token(tcred.ACCESS_TOKEN, tcred.ACCESS_TOKEN_SECRET)
+    auth = tweepy.OAuthHandler(tcred.consumer_keys[0], tcred.consumer_key_secrets[0])
+    auth.set_access_token(tcred.access_tokens[0], tcred.access_token_secrets[0])
 
     # application-only authentication
     # auth = tweepy.AppAuthHandler(tcred.CONSUMER_KEY, tcred.CONSUMER_KEY_SECRET)

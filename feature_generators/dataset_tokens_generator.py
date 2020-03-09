@@ -10,8 +10,8 @@ YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
 
 def generate_tokens(dataset_path, tokens_path):
 
-    tweet_tokenzier = helper.CustomTweetTokenizer(preserve_case=True, reduce_len=False,
-                                                  strip_handles=False, convert_urls=True)
+    tweet_tokenzier = helper.CustomTweetTokenizer(preserve_case=False, reduce_len=False,
+                                                  strip_handles=True, convert_urls=True)
 
     with open(tokens_path, 'w', newline='', encoding='utf-8') as wf:
         csv_writer = csv.writer(wf, delimiter=',')

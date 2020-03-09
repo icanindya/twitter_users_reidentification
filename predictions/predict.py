@@ -3,6 +3,10 @@ import numpy as np
 import sys
 import os
 import helper
+from sklearn.decomposition import PCA
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelBinarizer, StandardScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
 from keras.layers import Dense
@@ -13,44 +17,28 @@ import csv
 from nltk.stem import PorterStemmer
 from nltk.util import ngrams
 import joblib
+from keras.optimizers import SGD, Adam, RMSprop
+from keras.preprocessing.text import Tokenizer, text_to_word_sequence
+from sklearn.feature_extraction.text import CountVectorizer
 
-sys.path.append(r'D:\Projects\Python\AttributePrediction\external_projects\TextClassification')
-from models.keras_vdcnn_model import VDCNN
-from models.config import Config
+sys.path.append(r'D:\Projects\Python\AttributePrediction\thirdparty_modules\VDCNN')
+from vdcnn import VDCNN
+from HAN import HAN
 
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 YEARLY_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\yearly_tweets.csv'
 NUM_TWEETS = 50
 SELECTED_TWITTER_IDS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\twitter_ids_{}_tweets.csv'.format(NUM_TWEETS)
-PREDICTION_PATH = r'D:\Data\Linkage\FL\FL18\results\predictions\{}_{}_{}.csv'
+PREDICTION_PATH = r'D:\Data\Linkage\FL\FL18\attributes\predictions\{}_{}_{}.csv'
+MODEL_PATH = r'D:\Data\Linkage\FL\FL18\attributes\models\{}_{}_{}.model'
 
 TOP_1GRAMS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\top_1grams.txt'
 TOP_2GRAMS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\top_2grams.txt'
 
-# NGRAMS_TRAIN_FEATURES_PATH =
-# NGRAMS_TEST_FEATURES_PATH =
-
 porter_stemmer = PorterStemmer()
 
-
-def get_top_grams(TOP_SIZE):
-
-    top_onegrams = set()
-    top_twograms = set()
-
-    with open(TOP_1GRAMS_PATH, 'r', encoding='utf-8') as rf:
-        for i, line in enumerate(rf):
-            top_onegrams.add(line.strip())
-            if i == TOP_SIZE - 1:
-                break
-
-    with open(TOP_2GRAMS_PATH, 'r', encoding='utf-8') as rf:
-        for i, line in enumerate(rf):
-            top_twograms.add(line.strip())
-            if i == TOP_SIZE - 1:
-                break
-
-    return list(top_onegrams.union(top_twograms))
+SAVE_RESULTS = True
+SAVE_PREDICTIONS = True
 
 
 def process_text(row):
@@ -63,12 +51,16 @@ def process_text(row):
 
     return onegrams + twograms
 
+def  han_model(X_train, y_train, X_test, y_test,
+               output_shape, max_sents, max_sent_length, word_index_len, embedding_dim, embedding_matrix):
 
-def vdcnn(X_train, y_train, X_test, y_test):
+    model = HAN(output_shape, max_sents, max_sent_length, word_index_len, embedding_dim, embedding_matrix)
 
-    model = VDCNN(Config())
+    if y_train.shape[1] == 1:
+        model.compile(loss='binary_crossentropy', optimizer=RMSprop(lr=0.0001), metrics=['accuracy'])
+    else:
+        model.compile(loss='categorical_crossentropy', optimizer=RMSprop(lr=0.0001), metrics=['accuracy'])
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=128)
 
     scores = model.evaluate(X_test, y_test)
@@ -78,30 +70,70 @@ def vdcnn(X_train, y_train, X_test, y_test):
     return accuracy, y_pred
 
 
-def neural_net(X_train, y_train, X_test, y_test, output_dim, hidden_len):
+def vdcnn_model(X_train, y_train, X_test, y_test, sequence_max_length):
 
-    input_dim = X_train.shape[1]
-    hidden_dim = (input_dim + output_dim) // 2
+    model = VDCNN(num_classes=y_train.shape[1], sequence_length=sequence_max_length)
+
+    if y_train.shape[1] == 1:
+        model.compile(loss='binary_crossentropy', optimizer=SGD(lr=0.0001, momentum=0.9), metrics=['accuracy'])
+    else:
+        model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.0001, momentum=0.9), metrics=['accuracy'])
+
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=128)
+
+    scores = model.evaluate(X_test, y_test)
+    accuracy = scores[1] * 100
+    y_pred = model.predict(X_test)
+
+    return accuracy, y_pred
+
+
+def neural_net(X_train, y_train, X_test, y_test, hidden_len):
+
+    hidden_dim = (X_train.shape[1] + y_train.shape[1]) // 2
 
     model = Sequential()
-    model.add(Dense(hidden_dim, activation='relu', input_dim=input_dim))
+    model.add(Dense(hidden_dim, activation='relu', input_dim=X_train.shape[1]))
     for i in range(hidden_len):
         model.add(Dense(hidden_dim, activation='relu'))
-    model.add(Dense(output_dim, activation='softmax'))
 
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=50, batch_size=128)
+    if y_train.shape[1] == 1:
+        model.add(Dense(y_train.shape[1], activation='sigmoid'))
+        model.compile(loss='binary_crossentropy', optimizer=Adam(lr=0.0001), metrics=['accuracy'])
+    else:
+        model.add(Dense(y_train.shape[1], activation='softmax'))
+        model.compile(loss='categorical_crossentropy', optimizer=Adam(lr=0.0001), metrics=['accuracy'])
+    model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=128)
 
     scores = model.evaluate(X_test, y_test)
     accuracy = scores[1] * 100
     y_pred = model.predict(X_test)
 
+    y_pred_proba = model.predict_proba(X_test)
+
+    return model, accuracy, y_pred, y_pred_proba
+
+
+def svm(X_train, y_train, X_test, y_test):
+    model = OneVsRestClassifier(SVC())
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred) * 100
+
     return accuracy, y_pred
 
+def logistic(X_train, y_train, X_test, y_test):
+
+    model = LogisticRegression()
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred) * 100
+
+    return accuracy, y_pred
 
 def random_forest(X_train, y_train, X_test, y_test):
 
-    model = RandomForestClassifier(n_estimators=500, max_depth=None, random_state=helper.random_seed)
+    model = RandomForestClassifier(n_estimators=1000, max_depth=None, random_state=helper.random_seed)
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
     accuracy = accuracy_score(y_test, y_pred) * 100
@@ -109,15 +141,21 @@ def random_forest(X_train, y_train, X_test, y_test):
     return accuracy, y_pred
 
 
-def save_predictions(attribute, algo, features, predictions):
+def save_model_predictions(attribute, algo, features, model, labels, test_twitter_ids, test_actuals, test_preds, pred_probs):
+
+    if len(labels) == 2:
+        labels = ['prob']
+
+    with open(MODEL_PATH.format(attribute, algo, '-'.join(features)), 'w', newline='', encoding='utf-8') as json_file:
+        json_file.write(model.to_json())
 
     with open(PREDICTION_PATH.format(attribute, algo, '-'.join(features)), 'w', newline='', encoding='utf-8') as wf:
         csv_writer = csv.writer(wf, delimiter=',')
-        csv_writer.writerow(['predictions'])
 
-        for prediction in predictions:
-            csv_writer.writerow([prediction])
+        csv_writer.writerow(['twitter_id', 'orig_{}'.format(attribute), 'pred_{}'.format(attribute)] + list(labels))
 
+        for id, actual, pred, prob in zip(test_twitter_ids, test_actuals, test_preds, pred_probs):
+            csv_writer.writerow([str(id), actual, pred] + list(prob))
 
 if len(sys.argv) > 1:
     attribute_list = [sys.argv[1]]
@@ -128,17 +166,19 @@ if len(sys.argv) > 1:
     features_list = [features]
 
 else:
-    attribute_list = ['sex', 'race', 'party']
-    algo_list = ['random-forest']
-    features_list = [['ngrams']]
+    attribute_list = ['dob', 'sex', 'race', 'party']
+    algo_list = ['nn']
+    features_list = [['doc2vec']]
 
 ids_df = pd.read_csv(SELECTED_TWITTER_IDS_PATH, header=0)
 test_ids_df = ids_df.sample(frac=helper.test_percentage, random_state=helper.random_seed)
-test_ids = test_ids_df['twitter_ids'].tolist()
+test_ids = test_ids_df['twitter_id'].tolist()
 train_ids_df = ids_df.drop(test_ids_df.index)
-train_ids = train_ids_df['twitter_ids'].tolist()
+train_ids = train_ids_df['twitter_id'].tolist()
 
-with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8') as wf:
+tokenizer = None
+
+with open(r'D:\Data\Linkage\FL\FL18\attributes\master_results.txt', 'a', encoding='utf-8') as wf:
 
     for features in features_list:
         for algo in algo_list:
@@ -148,17 +188,16 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
 
                 df_list = []
 
-                if attribute == 'age':
-                    dataset_path = YEARLY_TWEETS_PATH
-                    df = pd.read_csv(dataset_path, header=0, usecols=['twitter_id', attribute])
-                    df['age'] = df['age'].apply(helper.get_maif_age_label)
-                    df_list.append(df)
-                else:
-                    dataset_path = ALL_TWEETS_PATH
-                    df = pd.read_csv(dataset_path, header=0, usecols=['twitter_id', attribute])
-                    if attribute == 'race':
-                        df['race'] = df['race'].apply(helper.get_text_race_code)
-                    df_list.append(df)
+                dataset_path = ALL_TWEETS_PATH
+                df = pd.read_csv(dataset_path, header=0, usecols=['twitter_id', attribute])
+                if attribute == 'race':
+                    df['race'] = df['race'].apply(helper.get_short_race)
+                elif attribute == 'dob':
+                    df['dob'] = df['dob'].apply(helper.get_generation)
+                elif attribute == 'party':
+                    df['party'] = df['party'].apply(helper.get_short_party)
+
+                df_list.append(df)
 
                 file_name, file_ext = os.path.splitext(dataset_path)
 
@@ -174,46 +213,70 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
                     features_path = file_name + '_d2v_100_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
-                if 'textual' in features:
-                    features_path = file_name + '_textual_features.csv'
+                if 'linguistic' in features:
+                    features_path = file_name + '_linguistic_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
                 if 'lda' in features:
                     features_path = file_name + '_lda_60_doc_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
+                if 'empath' in features:
+                    features_path = file_name + '_empath_194_features.csv'
+                    df_list.append(pd.read_csv(features_path, header=0))
+
+                if 'twitter_name' in features:
+
+                    features_path = file_name + '_twitter_name.csv'
+                    twitter_name_df = pd.read_csv(features_path, header=0)
+
+                    print(len(twitter_name_df['twitter_name']))
+                    twitter_name_df['twitter_name'] = twitter_name_df['twitter_name'].astype(str)
+                    vect = CountVectorizer(analyzer='char', max_df=0.3, min_df=3, ngram_range=(2, 2), lowercase=True)
+                    vect.fit_transform(twitter_name_df['twitter_name'])
+                    vocab = vect.vocabulary_
+                    twitter_name_df['twitter_name'] = twitter_name_df['twitter_name'].apply(lambda x: [vocab[''.join(ngram)] for ngram in ngrams(x, 2) if ''.join(ngram) in vocab])
+
+                    print(len(twitter_name_df['twitter_name']))
+
+
+                if 'twitter_handle' in features:
+                    features_path = file_name + '_twitter_handle.csv'
+                    df_list.append(pd.read_csv(features_path, header=0))
+
                 if 'text' in features:
                     features_path = file_name + '_tokens.csv'
-                    df_list.append(pd.read_csv(features_path, header=0))
+                    tokens_df = pd.read_csv(features_path, header=0)
+                    tokens_df['tokens_joined'] = tokens_df['tokens_joined'].apply(
+                        lambda text: ' '.join([tok.lower() for tok in text.split() if not helper.stop_or_mention(tok)])
+                    )
+                    df_list.append(tokens_df)
 
                 if 'ngrams' in features:
                     model_path = file_name + '_tfidf_20000.model'
                     tfidf = joblib.load(model_path)
-                    df_list.append(pd.DataFrame(tfidf.todense()))
-
+                    tfidf_dense = tfidf.todense()
+                    df_list.append(pd.DataFrame(tfidf_dense))
 
                 df = pd.concat(df_list, axis=1)
 
                 train_df = df.loc[df['twitter_id'].isin(train_ids)]
                 test_df = df.loc[df['twitter_id'].isin(test_ids)]
 
+                test_twitter_ids = test_df['twitter_id'].tolist()
+
                 X_train = train_df.drop(['twitter_id', attribute], axis=1).values
                 y_train = np.array(train_df[attribute])
                 X_test = test_df.drop(['twitter_id', attribute], axis=1).values
                 y_test = np.array(test_df[attribute])
 
-                # if 'ngrams' in features:
-                #     top_grams = get_top_grams(10000)
-                #     vectorizer = TfidfVectorizer(analyzer=process_text, vocabulary=top_grams)
-                #     X_train = vectorizer.fit_transform(X_train)
-                #     X_test = vectorizer.transform(X_test)
-                #     joblib.dump(X_train, file_name + '_ngram_train_{}_features.bin'.format(len(top_grams)))
-                #     joblib.dump(X_test, file_name + '_ngram_test_{}_features.bin'.format(len(top_grams)))
-
                 if 'text' not in features:
                     scaler = StandardScaler()
                     X_train = scaler.fit_transform(X_train)
                     X_test = scaler.transform(X_test)
+                    # pca = PCA(n_components=100)
+                    # X_train =  pca.fit_transform(X_train)
+                    # X_test = pca.transform(X_test)
 
                 y = np.concatenate((y_train, y_test))
                 label_binerizer = LabelBinarizer().fit(y)
@@ -221,13 +284,103 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
                 y_test = label_binerizer.transform(y_test)
                 y_test_inv = label_binerizer.inverse_transform(y_test)
 
-                if algo == 'neural-network':
-                    accuracy, y_pred = neural_net(X_train, y_train, X_test, y_test, output_dim=len(label_binerizer.classes_), hidden_len=1)
+                if algo == 'nn':
+                    model, accuracy, y_pred, y_pred_proba = neural_net(X_train, y_train, X_test, y_test, hidden_len=1)
+
+                elif algo == 'svm':
+                    accuracy, y_pred = svm(X_train, y_train, X_test, y_test)
+
+                elif algo == 'han':
+
+                    MAX_SENT_LENGTH = 100
+                    MAX_SENTS = 15
+                    MAX_NB_WORDS = 20000
+                    EMBEDDING_DIM = 100
+
+                    if not tokenizer:
+
+                        docs = [row[0] for row in X_train.tolist() + X_test.tolist()]
+                        tokenizer = Tokenizer(num_words=MAX_NB_WORDS)
+                        tokenizer.fit_on_texts(docs)
+
+                    word_index = tokenizer.word_index
+                    print('Total %s unique tokens.' % len(word_index))
+
+                    def doc2tensor(row):
+
+                        doc = row[0]
+
+                        sentences = doc.lower().split()
+
+                        data = np.zeros((MAX_SENTS, MAX_SENT_LENGTH), dtype='int32')
+
+                        for j, sent in enumerate(sentences):
+                            if j < MAX_SENTS:
+                                wordTokens = text_to_word_sequence(sent)
+                                k = 0
+                                for _, word in enumerate(wordTokens):
+                                    if k < MAX_SENT_LENGTH and tokenizer.word_index[word] < MAX_NB_WORDS:
+                                        data[j, k] = tokenizer.word_index[word]
+                                        k = k + 1
+
+                        return data
+
+                    X_train = np.apply_along_axis(doc2tensor, 1, X_train)
+                    X_test = np.apply_along_axis(doc2tensor, 1, X_test)
+
+                    GLOVE_PRETRAINED_MODEL_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\glove.twitter.27B.100d.txt'
+                    embeddings_index = {}
+                    f = open(GLOVE_PRETRAINED_MODEL_PATH, encoding='utf-8')
+                    for line in f:
+                        values = line.split()
+                        word = values[0]
+                        coefs = np.asarray(values[1:], dtype='float32')
+                        embeddings_index[word] = coefs
+                    f.close()
+
+                    print('Total %s word vectors.' % len(embeddings_index))
+
+                    embedding_matrix = np.random.random((len(word_index) + 1, EMBEDDING_DIM))
+                    for word, i in word_index.items():
+                        embedding_vector = embeddings_index.get(word)
+                        if embedding_vector is not None:
+                            # words not found in embedding index will be all-zeros.
+                            embedding_matrix[i] = embedding_vector
+
+                    accuracy, y_pred = han_model(X_train, y_train, X_test, y_test,
+                                                 y_train.shape[1], MAX_SENTS, MAX_SENT_LENGTH, len(word_index), EMBEDDING_DIM, embedding_matrix)
 
                 elif algo == 'vdcnn':
-                    accuracy, y_pred = vdcnn(X_train, y_train, X_test, y_test)
 
-                elif algo == 'random-forest':
+                    alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789-,;.!?:’"/|_#$%ˆ&*˜‘+=<>()[]{} '
+                    char_dict = {}
+                    sequence_max_length = 1024
+                    for i, c in enumerate(alphabet):
+                        char_dict[c] = i + 1
+
+                    def char2vec(row):
+                        text = row[0]
+
+                        data = np.zeros(sequence_max_length)
+                        for i in range(0, len(text)):
+                            if i >= sequence_max_length:
+                                return data
+                            elif text[i] in char_dict:
+                                data[i] = char_dict[text[i]]
+                            else:
+                                # unknown character set to be 68
+                                data[i] = 68
+                        return data
+
+                    X_train = np.apply_along_axis(char2vec, 1, X_train)
+                    X_test = np.apply_along_axis(char2vec, 1, X_test)
+
+                    accuracy, y_pred = vdcnn_model(X_train, y_train, X_test, y_test, sequence_max_length=sequence_max_length)
+
+                elif algo == 'rf':
+                    accuracy, y_pred = random_forest(X_train, y_train, X_test, y_test)
+
+                elif algo == 'logistic':
                     accuracy, y_pred = random_forest(X_train, y_train, X_test, y_test)
 
                 y_pred_inv = label_binerizer.inverse_transform(y_pred)
@@ -239,20 +392,25 @@ with open(r'D:\Data\Linkage\FL\FL18\results\results.txt', 'a', encoding='utf-8')
                 # print('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
                 print('accuracy: {:.2f}\n'.format(accuracy))
                 print('confusion matrix:\n')
-                print('{}\n\n'.format(str(cm_df)))
-
-                wf.write('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
-                wf.write('accuracy: {:.2f}\n'.format(accuracy))
-                wf.write('confusion matrix:\n')
-                wf.write('{}\n\n'.format(str(cm_df)))
-                wf.flush()
-
-                # save_predictions(attribute, algo, features, y_pred_inv)
+                with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+                    print('{}\n\n'.format(str(cm_df)))
 
 
+                if SAVE_RESULTS:
 
-# 82.63 75.54, 52.13
-#ngram: 68, 22
+                    wf.write('attribute: {} | features: {} | algorithm: {}\n'.format(attribute, ','.join(features), algo))
+                    wf.write('accuracy: {:.2f}\n'.format(accuracy))
+                    wf.write('confusion matrix:\n')
+                    with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+                        wf.write('{}\n\n'.format(str(cm_df)))
+                    wf.flush()
+
+                if SAVE_PREDICTIONS:
+
+                    save_model_predictions(attribute, algo, features, model, list(label_binerizer.classes_),
+                                           test_twitter_ids, y_test_inv, y_pred_inv, y_pred_proba)
+
+
 
 
 

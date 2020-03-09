@@ -94,7 +94,7 @@ class InRange(BaseCompareFeature):
         else:
             return np.vectorize(inrange_compare)(s_right, s_left)
 
-DS_TWITTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\linkage_dataset_twitterside_att.csv"
+DS_TWITTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\linkage_dataset_twitterside_extra.csv"
 DS_VOTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\linkage_dataset_voterside.csv"
 
 df_twitter = pd.read_csv(DS_TWITTERSIDE_PATH, header=0, converters={'twitter_name': str, 'twitter_handle': str})
@@ -148,14 +148,15 @@ print('Num. of true links:', len(links_true))
 # print(len(df_voter))
 
 # indexer = recordlinkage.index.FullIndex()
-indexer = recordlinkage.index.BlockIndex(left_on=['pred_sex', 'pred_race', 'pred_party', 'pred_city', 'twitter_name_pref'], right_on=['sex', 'race', 'party', 'city', 'flname_pref'])
-# indexer = recordlinkage.index.BlockIndex(left_on=['birthday', 'city'], right_on=['birthday', 'city'])
+# indexer = recordlinkage.index.BlockIndex(left_on=['pred_sex', 'pred_race', 'pred_party', 'twitter_name_pref'], right_on=['sex', 'race', 'party', 'flname_pref'])
+indexer = recordlinkage.index.BlockIndex(left_on=['birthday', 'city'], right_on=['birthday', 'city'])
 # indexer = recordlinkage.index.SortedNeighbourhoodIndex(left_on='twitter_name', right_on='flname', window=11)
 links_candidate = indexer.index(df_twitter, df_voter)
 
 print('Num. of candidate links:', len(links_candidate))
 
 comparator = recordlinkage.Compare()
+comparator.le = le
 comparator.inrange = inrange
 
 
@@ -169,15 +170,12 @@ comparator.string('twitter_handle', 'fname', method='qgram', label='handle_fname
 comparator.string('twitter_handle', 'flname', method='qgram', label='handle_flname_qgram')
 
 # comparator.string('twitter_name', 'flname', method='jarowinkler', label='tname_flname_jw')
-# comparator.exact('pred_sex', 'sex', label='sex')
-# comparator.exact('pred_race', 'race', label='race')
+comparator.exact('pred_sex', 'sex', label='sex')
+comparator.exact('pred_race', 'race', label='race')
 comparator.inrange(comparator, 'pred_yob', 'yob', left_is_range=True, label='yob_range')
-# comparator.exact('pred_party', 'party', label='party')
-# comparator.exact('pred_city', 'city', label='city')
+comparator.exact('pred_party', 'party', label='party')
 
 comparison_vectors = comparator.compute(links_candidate, df_twitter, df_voter)
-
-print(comparison_vectors.iloc[0])
 
 # comparison_vectors['tname_fname_qgram'] = comparison_vectors['tname_fname_qgram'].apply(lambda x: 1 if x >= 0.5 else 0)
 # comparison_vectors['tname_flname_qgram'] = comparison_vectors['tname_flname_qgram'].apply(lambda x: 1 if x >= 0.5 else 0)

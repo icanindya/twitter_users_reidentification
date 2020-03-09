@@ -28,24 +28,26 @@ stop_url_symbol_list = stopwords.union(punctuation_list).union(special_list).uni
 
 class CustomTweetTokenizer(TweetTokenizer):
 
-    def __init__(self, preserve_case=True, reduce_len=False, strip_handles=False, convert_urls=True):
+    def __init__(self, preserve_case=True, reduce_len=False, strip_handles=False, convert_urls=True, remove_stopwords=False):
         super().__init__(preserve_case=preserve_case,
                          reduce_len=reduce_len,
                          strip_handles=strip_handles)
         self.convert_urls = convert_urls
+        self.remove_stopwords = remove_stopwords
 
     @staticmethod
     def convert_url(token):
         if token.startswith('http://') or token.startswith('https://'):
-            return '#URL'
+            return '#url'
         return token
 
     def tokenize(self, text):
         tokens = super().tokenize(text)
         if self.convert_urls:
-            return [self.convert_url(token) for token in tokens]
-        else:
-            return tokens
+            tokens = [self.convert_url(token) for token in tokens]
+        if self.remove_stopwords:
+            tokens = [token for token in tokens if token not in stopwords]
+        return tokens
 
 
 def get_twitter_user_apis():
@@ -92,7 +94,10 @@ def get_mongo_client():
     return mongo_client
 
 
-def get_text_race_code(code):
+def get_short_race(code):
+
+    code = int(code)
+
     if code == 1:
         return 'IA'
     elif code == 2:
@@ -109,6 +114,8 @@ def get_text_race_code(code):
         return 'MU'
     elif code == 9:
         return 'UN'
+    else:
+        return None
 
 
 def get_maif_age_label(age):
@@ -123,10 +130,63 @@ def get_maif_age_label(age):
     else:
         return '46+'
 
+def get_my_age_label(age):
+    if age <= 22:
+        return '22-'
+    elif 23 <= age <= 33:
+        return '23-33'
+    elif 34 <= age <= 45:
+        return '34-45'
+    elif 46 <= age <= 60:
+        return '46-60'
+    else:
+        return '61+'
+
+def get_generation(dob):
+
+    try:
+        yob = int(dob[-4:])
+
+        if yob >= 1996:
+            return '1996-2019'
+        elif 1986 <= yob <= 1995:
+            return '1986-1995'
+        elif 1976 <= yob <= 1985:
+            return '1976-1985'
+        elif 1966 <= yob <= 1975:
+            return '1966-1975'
+        elif 1956 <= yob <= 1965:
+            return '1956-1965'
+        else:
+            return '1900-1955'
+    except:
+        print('invalid dob: {}'.format(dob))
+        return None
 
 def get_short_party(party):
 
-    return party[:2]
+    if party == 'CPF':
+        return 'CP'
+    elif party == 'DEM':
+        return 'DM'
+    elif party == 'ECO':
+        return 'EC'
+    elif party == 'GRE':
+        return 'GR'
+    elif party == 'IND':
+        return 'IN'
+    elif party == 'LPF':
+        return 'LP'
+    elif party == 'NPA':
+        return 'NP'
+    elif party == 'PSL':
+        return 'SL'
+    elif party == 'REF':
+        return 'RF'
+    elif party == 'REP':
+        return 'RP'
+    else:
+        return None
 
 
 def date_difference_years(datetime1, datetime2):
@@ -138,27 +198,6 @@ def get_curr_age_label(dob):
     curr_datetime = datetime.strptime('01/01/2019 -0500', '%m/%d/%Y %z')
     age = date_difference_years(curr_datetime, dob_datetime)
     return get_maif_age_label(age)
-
-
-def get_race_label(race_code):
-    if race_code == 1:
-        return 'AI'
-    elif race_code == 2:
-        return 'AP'
-    elif race_code == 3:
-        return 'BL'
-    elif race_code == 4:
-        return 'HI'
-    elif race_code == 5:
-        return 'WH'
-    elif race_code == 6:
-        return 'OT'
-    elif race_code == 7:
-        return 'MU'
-    elif race_code == 9:
-        return 'UN'
-    else:
-        print('unknown race code: {}'.format(race_code))
 
 
 def is_link(text):
@@ -225,4 +264,7 @@ def jaccard_similarity(list1, list2):
     intersection = len(list(set(list1).intersection(list2)))
     union = (len(list1) + len(list2)) - intersection
     return float(intersection) / union
+
+
+
 
