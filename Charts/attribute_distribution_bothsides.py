@@ -40,7 +40,7 @@ def reformat_large_tick_values(tick_val, pos):
 
 
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
-VOTERS_PATH = r"D:\Data\Linkage\FL\FL18\linkage\linkage_dataset_voterside.csv"
+VOTERS_PATH = r"D:\Data\Linkage\FL\FL18\linkage\voterside.csv"
 NUM_TWEETS = 50
 SELECTED_TWITTER_IDS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\twitter_ids_{}_tweets.csv'.format(NUM_TWEETS)
 
@@ -93,8 +93,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(dob_counts))
 width = 0.2
 
-ax1.bar(ind - width/2, dob_counts['dob_twitter'].tolist(), color='lightskyblue', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, dob_counts['dob_voter'].tolist(), color='steelblue', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, dob_counts['dob_twitter'].tolist(), color='#009900', alpha= 0.8, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, dob_counts['dob_voter'].tolist(), color='#99ff99', alpha=0.8, width=width, label='FL Voters')
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(dob_counts.index.tolist())
@@ -103,7 +103,7 @@ handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
 
 ax1.legend(handles1 + handles2, labels1 + labels2, loc='upper center', ncol=2)
-ax1.set_xlabel('Generation')
+ax1.set_xlabel('(a) Generation')
 
 ax1 = fig.add_subplot(222)
 ax2 = ax1.twinx()
@@ -112,8 +112,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(sex_counts))
 width = 0.04
 
-ax1.bar(ind - width/2, sex_counts['sex_twitter'].tolist(), color='pink', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, sex_counts['sex_voter'].tolist(), color='palevioletred', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, sex_counts['sex_twitter'].tolist(), color='#ff8000', alpha= 0.8, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, sex_counts['sex_voter'].tolist(), color='#ffe680', alpha=0.8, width=width, label='FL Voters')
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(sex_counts.index.tolist())
@@ -122,7 +122,7 @@ handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
 
 ax1.legend(handles1 + handles2, labels1 + labels2, loc='upper center', ncol=2)
-ax1.set_xlabel('Sex')
+ax1.set_xlabel('(b) Sex')
 
 ax1 = fig.add_subplot(223)
 ax2 = ax1.twinx()
@@ -131,8 +131,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(race_counts))
 width = 0.3
 
-ax1.bar(ind - width/2, race_counts['race_twitter'].tolist(), color='lightgreen', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, race_counts['race_voter'].tolist(), color='seagreen', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, race_counts['race_twitter'].tolist(), color='#2952a3', alpha= 0.8, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, race_counts['race_voter'].tolist(), color='#b3d9ff', alpha=0.8, width=width, label='FL Voters')
 # ax2.get_yaxis().get_major_formatter().set_scientific(False)
 
 ax1.set_xticks(ind)
@@ -142,7 +142,7 @@ handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
 
 ax1.legend(handles1 + handles2, labels1 + labels2, loc='upper center', ncol=2)
-ax1.set_xlabel('Race')
+ax1.set_xlabel('(c) Race')
 
 ax1.text(0.71, 0.24, ('IA: American Indian or Alaskan Native\n\n'
                    'AP: Asian Or Pacific Islander\n\n'
@@ -154,7 +154,7 @@ ax1.text(0.71, 0.24, ('IA: American Indian or Alaskan Native\n\n'
                    'UN: Unknown'
                   ),
          color='black',
-         bbox=dict(facecolor='whitesmoke', edgecolor='lightgrey', boxstyle='round'),
+         bbox=dict(facecolor='white', edgecolor='lightgrey', boxstyle='round'),
          transform=ax1.transAxes,
          fontsize='x-small')
 
@@ -166,8 +166,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(party_counts))
 width = 0.34
 
-ax1.bar(ind - width/2, party_counts['party_twitter'].tolist(), color='sandybrown', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, party_counts['party_voter'].tolist(), color='chocolate', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, party_counts['party_twitter'].tolist(), color='#ff1a1a', alpha= 0.8, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, party_counts['party_voter'].tolist(), color='#ffaa80', alpha=0.8, width=width, label='FL Voters')
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(party_counts.index.tolist())
@@ -176,7 +176,7 @@ handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
 
 ax1.legend(handles1 + handles2, labels1 + labels2, loc='upper center', ncol=2)
-ax1.set_xlabel('Party Affiliation')
+ax1.set_xlabel('(d) Party Affiliation')
 
 
 ax1.text(0.65, 0.17, ('CP: Constitution Party of Florida\n\n'
@@ -191,7 +191,7 @@ ax1.text(0.65, 0.17, ('CP: Constitution Party of Florida\n\n'
                    'RP: Republican Party of Florida'
                   ),
          color='black',
-         bbox=dict(facecolor='whitesmoke', edgecolor='lightgrey', boxstyle='round'),
+         bbox=dict(facecolor='white', edgecolor='lightgrey', boxstyle='round'),
          transform=ax1.transAxes,
          fontsize='x-small')
 

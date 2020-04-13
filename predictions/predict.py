@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 import sys
 import os
+import re
+
+from pip._vendor.pyparsing import unicode_set
+
 import helper
 from sklearn.decomposition import PCA
 from sklearn.multiclass import OneVsRestClassifier
@@ -20,6 +24,7 @@ import joblib
 from keras.optimizers import SGD, Adam, RMSprop
 from keras.preprocessing.text import Tokenizer, text_to_word_sequence
 from sklearn.feature_extraction.text import CountVectorizer
+import unidecode
 
 sys.path.append(r'D:\Projects\Python\AttributePrediction\thirdparty_modules\VDCNN')
 from vdcnn import VDCNN
@@ -41,6 +46,39 @@ SAVE_RESULTS = True
 SAVE_PREDICTIONS = True
 
 
+def preprocess_name(name):
+
+    # Remove parethesized content
+    name = name.replace(r'\(.*\)', '')
+
+    # Convert accented characters
+    name = unidecode.unidecode(name)
+
+    # Replace '-', '_' and '.' with ' ':
+    name = name.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+
+    # Remove non-alpha characters except spaces
+    name = re.sub(r'[^a-zA-Z ]', '', name)
+
+    # Make lower-case
+    name = name.lower()
+
+    # Remove prefix mr., mr , ms , ms., mrs., mrs , miss, sir, dr
+    prefix_list = ['mr ', 'ms ', 'mrs ', 'miss ', 'sir ', 'dr ']
+
+    for prefix in prefix_list:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+
+    # Convert consecutive spaces into single space
+    name = re.sub(' +', ' ', name)
+
+    # Finally trim
+    name = name.strip()
+
+    return name
+
+
 def process_text(row):
 
     text = row[0]
@@ -50,6 +88,7 @@ def process_text(row):
     twograms = [' '.join(ngram) for ngram in ngrams(stems, 2)]
 
     return onegrams + twograms
+
 
 def  han_model(X_train, y_train, X_test, y_test,
                output_shape, max_sents, max_sent_length, word_index_len, embedding_dim, embedding_matrix):
@@ -122,6 +161,7 @@ def svm(X_train, y_train, X_test, y_test):
 
     return accuracy, y_pred
 
+
 def logistic(X_train, y_train, X_test, y_test):
 
     model = LogisticRegression()
@@ -166,9 +206,9 @@ if len(sys.argv) > 1:
     features_list = [features]
 
 else:
-    attribute_list = ['dob', 'sex', 'race', 'party']
+    attribute_list = ['race']
     algo_list = ['nn']
-    features_list = [['doc2vec']]
+    features_list = [['name_ngrams']]
 
 ids_df = pd.read_csv(SELECTED_TWITTER_IDS_PATH, header=0)
 test_ids_df = ids_df.sample(frac=helper.test_percentage, random_state=helper.random_seed)
@@ -178,8 +218,7 @@ train_ids = train_ids_df['twitter_id'].tolist()
 
 tokenizer = None
 
-with open(r'D:\Data\Linkage\FL\FL18\attributes\master_results.txt', 'a', encoding='utf-8') as wf:
-
+with open(r'D:\Data\Linkage\FL\FL18\attributes\results_varying_rows.txt', 'a', encoding='utf-8') as wf:
     for features in features_list:
         for algo in algo_list:
             for attribute in attribute_list:
@@ -211,6 +250,7 @@ with open(r'D:\Data\Linkage\FL\FL18\attributes\master_results.txt', 'a', encodin
 
                 if 'doc2vec' in features:
                     features_path = file_name + '_d2v_100_features.csv'
+                    # features_path = file_name + '_chunked_d2v_100_features_{}_tweets.csv'.format(num_tweets)
                     df_list.append(pd.read_csv(features_path, header=0))
 
                 if 'linguistic' in features:
@@ -225,20 +265,19 @@ with open(r'D:\Data\Linkage\FL\FL18\attributes\master_results.txt', 'a', encodin
                     features_path = file_name + '_empath_194_features.csv'
                     df_list.append(pd.read_csv(features_path, header=0))
 
-                if 'twitter_name' in features:
+                if 'name_ngrams' in features:
 
-                    features_path = file_name + '_twitter_name.csv'
-                    twitter_name_df = pd.read_csv(features_path, header=0)
+                    features_path = file_name + '_twitter_name_handle.csv'
+                    twitter_name_df = pd.read_csv(features_path, header=0, usecols=['twitter_name'],
+                                          converters={'twitter_name': str})
 
-                    print(len(twitter_name_df['twitter_name']))
-                    twitter_name_df['twitter_name'] = twitter_name_df['twitter_name'].astype(str)
-                    vect = CountVectorizer(analyzer='char', max_df=0.3, min_df=3, ngram_range=(2, 2), lowercase=True)
-                    vect.fit_transform(twitter_name_df['twitter_name'])
-                    vocab = vect.vocabulary_
-                    twitter_name_df['twitter_name'] = twitter_name_df['twitter_name'].apply(lambda x: [vocab[''.join(ngram)] for ngram in ngrams(x, 2) if ''.join(ngram) in vocab])
+                    twitter_name_df['twitter_name'] = twitter_name_df['twitter_name'].apply(preprocess_name)
+                    vect = TfidfVectorizer(analyzer='char', max_df=0.3, min_df=3, ngram_range=(2, 2), lowercase=False)
+                    name_ngrams_tfidf = vect.fit_transform(twitter_name_df['twitter_name'])
 
-                    print(len(twitter_name_df['twitter_name']))
+                    print(len(vect.get_feature_names()))
 
+                    df_list.append(pd.DataFrame(name_ngrams_tfidf.todense()))
 
                 if 'twitter_handle' in features:
                     features_path = file_name + '_twitter_handle.csv'
@@ -409,16 +448,3 @@ with open(r'D:\Data\Linkage\FL\FL18\attributes\master_results.txt', 'a', encodin
 
                     save_model_predictions(attribute, algo, features, model, list(label_binerizer.classes_),
                                            test_twitter_ids, y_test_inv, y_pred_inv, y_pred_proba)
-
-
-
-
-
-
-
-
-
-
-
-
-

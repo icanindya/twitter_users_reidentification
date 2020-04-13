@@ -50,7 +50,7 @@ for voter_obj in voter_objs:
     voter_serial = voter_obj['serial']
     voter_obj_dict[voter_serial] = voter_obj
 
-combined_df.rename(columns={'orig_dob': 'orig_gen', 'pred_dob': 'pred_gen'})
+combined_df.rename(columns={'orig_dob': 'orig_gen', 'pred_dob': 'pred_gen'}, inplace=True)
 
 combined_df['twitter_name'] = combined_df['twitter_id'].apply(lambda x: user_obj_dict[x]['name'])
 combined_df['twitter_handle'] = combined_df['twitter_id'].apply(lambda x: user_obj_dict[x]['screen_name'])
