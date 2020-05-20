@@ -47,7 +47,7 @@ As of July 2019, Twitter had a feature that would let an user to import his cont
 * Several deterministic record linkage models
 * Fellegi-Sunter Expectation Maximization model
 
-## Results:
+## Results
 
 * Results have been published in a conference paper, which is currently under review.
 
