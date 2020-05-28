@@ -28,7 +28,8 @@ As of July 2019, Twitter had a feature that would let an user to import his cont
 ## Attribute Prediction
 
 * Using Tweets:
-  * Stemmed word n-grams: top 10K unigrams, top 10K bigrams + Random Forest
+  * Word n-grams TF-IDF: top 10K unigrams, top 10K bigrams + Random Forest
+  * Lexicon features: [Empath](https://hci.stanford.edu/publications/2016/ethan/empath-chi-2016.pdf) 
   * 64 NLP Features + Neural Net
   * Doc2Vec, fastText, GloVe features + Neural Net
   * LDA topic modeling features + Neural Net
