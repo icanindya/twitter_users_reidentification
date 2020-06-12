@@ -1,10 +1,10 @@
 import pandas as pd
 import helper
 
-LINKAGE_TWITTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\linkage_dataset_twitterside.csv"
+LINKAGE_TWITTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\twitterside.csv"
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
 PRED_DOB_PATH = r"D:\Data\Linkage\FL\FL18\attributes\predictions\dob_nn_doc2vec.csv"
-PRED_SEX_PATH = r"D:\Data\Linkage\FL\FL18\attributes\predictions\sex_nn_doc2vec.csv"
+PRED_SEX_PATH = r"D:\Data\Linkage\FL\FL18\attributes\predictions\sex_nn_doc2vec-name_ngrams.csv"
 PRED_RACE_PATH = r"D:\Data\Linkage\FL\FL18\attributes\predictions\race_nn_doc2vec.csv"
 PRED_PARTY_PATH = r"D:\Data\Linkage\FL\FL18\attributes\predictions\party_nn_doc2vec.csv"
 

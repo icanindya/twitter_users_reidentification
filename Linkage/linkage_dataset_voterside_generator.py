@@ -29,7 +29,10 @@ with open(LINKAGE_DSB, 'w', newline='', encoding='utf-8') as wf_csv:
                 phone = tokens[13]
                 email = tokens[14].strip()
                 gen = helper.get_generation(dob)
-                writer.writerow([voter_serial, fname, mname, lname,
-                                 sex, race, dob, gen, party, city])
+                writer.writerow([voter_serial, fname,
+                                 mname, lname,
+                                 sex, race,
+                                 dob, gen,
+                                 party, city])
 
 

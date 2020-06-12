@@ -206,9 +206,9 @@ if len(sys.argv) > 1:
     features_list = [features]
 
 else:
-    attribute_list = ['race']
+    attribute_list = ['sex']
     algo_list = ['nn']
-    features_list = [['name_ngrams']]
+    features_list = [['doc2vec', 'name_ngrams']]
 
 ids_df = pd.read_csv(SELECTED_TWITTER_IDS_PATH, header=0)
 test_ids_df = ids_df.sample(frac=helper.test_percentage, random_state=helper.random_seed)

@@ -67,7 +67,7 @@ df = pd.read_csv(ALL_TWEETS_PATH, header=0, usecols=['twitter_id', 'num_tweets']
 df = df.loc[df['twitter_id'].isin(selected_ids)]
 
 min_tweets = df['num_tweets'].min()
-max_tweets = df['num_tweets'].max()
+max_tweets = min(3200, df['num_tweets'].max())
 
 if max_tweets % step2 != 0:
     max_tweets = ((max_tweets // step2) + 1) * step2

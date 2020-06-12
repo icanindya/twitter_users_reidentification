@@ -93,8 +93,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(dob_counts))
 width = 0.2
 
-ax1.bar(ind - width/2, dob_counts['dob_twitter'].tolist(), color='#009900', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, dob_counts['dob_voter'].tolist(), color='#99ff99', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, dob_counts['dob_twitter'].tolist(), color='#009900', alpha=1.0, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, dob_counts['dob_voter'].tolist(), color='#009900', alpha=0.5, width=width, label='FL Voters') #99ff99
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(dob_counts.index.tolist())
@@ -112,8 +112,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(sex_counts))
 width = 0.04
 
-ax1.bar(ind - width/2, sex_counts['sex_twitter'].tolist(), color='#ff8000', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, sex_counts['sex_voter'].tolist(), color='#ffe680', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, sex_counts['sex_twitter'].tolist(), color='#ff8000', alpha=1.0, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, sex_counts['sex_voter'].tolist(), color='#ff8000', alpha=0.5, width=width, label='FL Voters') #ffe680
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(sex_counts.index.tolist())
@@ -131,8 +131,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(race_counts))
 width = 0.3
 
-ax1.bar(ind - width/2, race_counts['race_twitter'].tolist(), color='#2952a3', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, race_counts['race_voter'].tolist(), color='#b3d9ff', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, race_counts['race_twitter'].tolist(), color='#2952a3', alpha=1.0, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, race_counts['race_voter'].tolist(), color='#2952a3', alpha=0.5, width=width, label='FL Voters') #b3d9ff
 # ax2.get_yaxis().get_major_formatter().set_scientific(False)
 
 ax1.set_xticks(ind)
@@ -166,8 +166,8 @@ axes.extend([ax1, ax2])
 ind = np.arange(len(party_counts))
 width = 0.34
 
-ax1.bar(ind - width/2, party_counts['party_twitter'].tolist(), color='#ff1a1a', alpha= 0.8, width=width, label='Twitter Users')
-ax2.bar(ind + width/2, party_counts['party_voter'].tolist(), color='#ffaa80', alpha=0.8, width=width, label='FL Voters')
+ax1.bar(ind - width/2, party_counts['party_twitter'].tolist(), color='#ff1a1a', alpha=1.0, width=width, label='Twitter Users')
+ax2.bar(ind + width/2, party_counts['party_voter'].tolist(), color='#ff1a1a', alpha=0.5, width=width, label='FL Voters') #ffaa80
 
 ax1.set_xticks(ind)
 ax1.set_xticklabels(party_counts.index.tolist())

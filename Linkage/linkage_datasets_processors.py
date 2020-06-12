@@ -1,6 +1,7 @@
 import unidecode
 import re
 import pandas as pd
+from numpy.distutils.system_info import dfftw_info
 
 LINKAGE_TWITTER_PATH = r'D:\Data\Linkage\FL\FL18\linkage\twitterside.csv'
 LINKAGE_TWITTER_PROCESSED_PATH = r'D:\Data\Linkage\FL\FL18\linkage\twitterside_processed.csv'
@@ -9,7 +10,7 @@ LINKAGE_VOTER_PROCESSED_PATH = r'D:\Data\Linkage\FL\FL18\linkage\voterside_proce
 CITY_VOTERS_PATH = r'D:\Data\Linkage\FL\FL18\linkage\citywise\voterside_processed_{}.csv'
 
 
-def preprocess_name(name):
+def preprocess_name(name, title=False):
 
     # Remove parethesized content
     name = name.replace(r'\(.*\)', '')
@@ -39,55 +40,67 @@ def preprocess_name(name):
     # Finally trim
     name = name.strip()
 
+    # Optionally titlecase
+    if title:
+
+        name = name.title()
+
     return name
 
+def preprocess_city(city):
 
-# df_twitter = pd.read_csv(LINKAGE_TWITTER_PATH,
-#                          header=0,
-#                          converters={'twitter_name': str,
-#                                      'twitter_handle': str,
-#                                      'orig_fname': str,
-#                                      'orig_mname': str,
-#                                      'orig_lname': str})
-#
-# # Preprocess names
-# df_twitter['twitter_name'] = df_twitter['twitter_name'].apply(preprocess_name)
-# df_twitter['twitter_handle'] = df_twitter['twitter_handle'].apply(preprocess_name)
+    city = re.sub(r'\W+', '', city)
+    city = city.lower()
+    return city
 
-# df_twitter.to_csv(LINKAGE_TWITTER_PROCESSED_PATH, index=False)
+if __name__ == '__main__':
 
 
-df_voter = pd.read_csv(LINKAGE_VOTER_PATH,
-                       header=0,
-                       converters={'fname': str, 'mname': str,
-                                   'lname': str, 'sex': str,
-                                   'race': str, 'dob': str,
-                                   'party': str, 'city': str})
-
-# Only keep voters born after 1945
-df_voter = df_voter.loc[df_voter['dob'].apply(lambda x: int(x[-4:])) > 1945]
-
-# Preprocess names
-df_voter['fname'] = df_voter['fname'].apply(preprocess_name)
-df_voter['mname'] = df_voter['mname'].apply(preprocess_name)
-df_voter['lname'] = df_voter['lname'].apply(preprocess_name)
-df_voter.insert(4, 'full_name', df_voter[['fname', 'mname', 'lname']].agg(lambda names: ' '.join([n for n in names if n]), axis=1))
-
-df_voter.to_csv(LINKAGE_VOTER_PROCESSED_PATH, index=False)
+    df_twitter = pd.read_csv(LINKAGE_TWITTER_PATH,
+                             header=0,
+                             converters={'twitter_name': str,
+                                         'twitter_handle': str,
+                                         'orig_fname': str,
+                                         'orig_mname': str,
+                                         'orig_lname': str})
 
 
-df_voter = pd.read_csv(LINKAGE_VOTER_PROCESSED_PATH, header=0, converters={'city': str})
+    # Preprocess names
+    df_twitter['twitter_name'] = df_twitter['twitter_name'].apply(preprocess_name, args=(False,))
+    df_twitter['twitter_handle'] = df_twitter['twitter_handle'].apply(preprocess_name, args=(False,))
+    df_twitter['orig_city'] = df_twitter['orig_city'].apply(preprocess_city)
+    df_twitter['orig_fname'] = df_twitter['orig_fname'].apply(preprocess_name, args=(False,))
+    df_twitter['orig_mname'] = df_twitter['orig_mname'].apply(preprocess_name, args=(False,))
+    df_twitter['orig_lname'] = df_twitter['orig_lname'].apply(preprocess_name, args=(False,))
+    df_twitter.to_csv(LINKAGE_TWITTER_PROCESSED_PATH, index=False)
+    #
 
-# city_voters_dict = {}
-
-for city in df_voter['city'].unique():
-
-    city = city.strip().replace('/', '+')
-
-    if city not in ['', '*']:
-
-        df_city_voters = df_voter.loc[df_voter['city'] == city]
-        df_city_voters.to_csv(CITY_VOTERS_PATH.format(city), index=False)
+    # df_voter = pd.read_csv(LINKAGE_VOTER_PATH,
+    #                        header=0,
+    #                        converters={'fname': str,
+    #                                    'mname': str,
+    #                                    'lname': str,
+    #                                    'sex': str,
+    #                                    'race': str,
+    #                                    'dob': str,
+    #                                    'gen': str,
+    #                                    'party': str,
+    #                                    'city': str})
+    #
+    # # Preprocess names
+    # df_voter['fname'] = df_voter['fname'].apply(preprocess_name, args=(False,))
+    # df_voter['mname'] = df_voter['mname'].apply(preprocess_name, args=(False,))
+    # df_voter['lname'] = df_voter['lname'].apply(preprocess_name, args=(False,))
+    # df_voter['city'] = df_voter['city'].apply(preprocess_city)
+    #
+    # df_voter.to_csv(LINKAGE_VOTER_PROCESSED_PATH, index=False)
+    #
+    #
+    # df_voter = pd.read_csv(LINKAGE_VOTER_PROCESSED_PATH, header=0, converters={'city': str})
+    #
+    # for city in df_voter['city'].unique():
+    #     df_city_voters = df_voter.loc[df_voter['city'] == city]
+    #     df_city_voters.to_csv(CITY_VOTERS_PATH.format(city), index=False)
 
 
 

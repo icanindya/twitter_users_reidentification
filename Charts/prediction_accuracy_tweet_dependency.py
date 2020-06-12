@@ -45,7 +45,7 @@ ax2.set_xticklabels([str(v)+ 'K' for v in x2])
 ax2.set_ylim(bottom=48, top=90)
 
 handles, labels = ax1.get_legend_handles_labels()
-fig.legend(handles, labels, loc='upper center', ncol=4)
-
+fig.legend(handles, labels, loc='lower center', ncol=4)
+plt.tight_layout()
 plt.show()
 
