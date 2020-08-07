@@ -1,4 +1,4 @@
-# Asssessing the Re-identification Risk of Twitter Users on US Voter Records
+# Assessing the Re-identification Risk of Twitter Users on US Voter Records
 This project aims to reveal the real identities of Twitter users using US Voter Registration Records.
 
 ## Methodology
