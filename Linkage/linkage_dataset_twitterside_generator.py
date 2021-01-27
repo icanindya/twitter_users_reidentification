@@ -1,5 +1,50 @@
 import pandas as pd
 import helper
+import unidecode
+import re
+
+def preprocess_name(name, title=False):
+
+    # Remove parethesized content
+    name = name.replace(r'\(.*\)', '')
+
+    # Convert accented characters
+    name = unidecode.unidecode(name)
+
+    # Replace '-', '_' and '.' with ' ':
+    name = name.replace('-', ' ').replace('_', ' ').replace('.', ' ')
+
+    # Remove non-alpha characters except spaces
+    name = re.sub(r'[^a-zA-Z ]', '', name)
+
+    # Make lower-case
+    name = name.lower()
+
+    # Remove prefix mr., mr , ms , ms., mrs., mrs , miss, sir, dr
+    prefix_list = ['mr ', 'ms ', 'mrs ', 'miss ', 'sir ', 'dr ']
+
+    for prefix in prefix_list:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+
+    # Convert consecutive spaces into single space
+    name = re.sub(' +', ' ', name)
+
+    # Finally trim
+    name = name.strip()
+
+    # Optionally titlecase
+    if title:
+
+        name = name.title()
+
+    return name
+
+def preprocess_city(city):
+
+    city = re.sub(r'\W+', '', city)
+    city = city.lower()
+    return city
 
 LINKAGE_TWITTERSIDE_PATH = r"D:\Data\Linkage\FL\FL18\linkage\twitterside.csv"
 ALL_TWEETS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\all_tweets.csv'
@@ -59,13 +104,22 @@ combined_df['orig_fname'] = combined_df['twitter_id'].apply(lambda x: voter_obj_
 combined_df['orig_mname'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['mname'])
 combined_df['orig_lname'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['lname'])
 combined_df['orig_city'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['city'].upper())
+combined_df['orig_county'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['county_code'].upper())
+combined_df['orig_zip'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['zip_code'][:5])
 combined_df['orig_dob'] = combined_df['twitter_id'].apply(lambda x: voter_obj_dict[voter_serial_dict[x]]['dob'])
-
 
 combined_df = combined_df[['twitter_id', 'voter_serial', 'twitter_name', 'twitter_handle',
                            'pred_gen', 'pred_sex', 'pred_race', 'pred_party',
                            'orig_fname', 'orig_mname', 'orig_lname', 'orig_city',
+                           'orig_county', 'orig_zip',
                            'orig_dob', 'orig_gen', 'orig_sex', 'orig_race', 'orig_party'
                            ]]
+
+combined_df['twitter_name'] = combined_df['twitter_name'].apply(preprocess_name, args=(False,))
+combined_df['twitter_handle'] = combined_df['twitter_handle'].apply(preprocess_name, args=(False,))
+combined_df['orig_city'] = combined_df['orig_city'].apply(preprocess_city)
+combined_df['orig_fname'] = combined_df['orig_fname'].apply(preprocess_name, args=(False,))
+combined_df['orig_mname'] = combined_df['orig_mname'].apply(preprocess_name, args=(False,))
+combined_df['orig_lname'] = combined_df['orig_lname'].apply(preprocess_name, args=(False,))
 
 combined_df.to_csv(LINKAGE_TWITTERSIDE_PATH, index=False)

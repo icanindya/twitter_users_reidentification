@@ -5,14 +5,27 @@ import math
 import pandas as pd
 import re
 import textdistance
+import sys
 from Linkage.linkage_datasets_processors import preprocess_name
 
-LINKAGE_TWITTER_PATH = r'D:\Data\Linkage\FL\FL18\linkage\twitterside_processed.csv'
-LINKAGE_VOTER_PATH = r'D:\Data\Linkage\FL\FL18\linkage\voterside_processed.csv'
-NAME_MAPPING_PATH = r'D:\Data\Linkage\FL\FL18\name_processing\name_mapping.txt'
-CITY_VOTERS_PATH = r'D:\Data\Linkage\FL\FL18\linkage\citywise\voterside_processed_{}.csv'
+if len(sys.argv) > 1:
 
-print('pred_attr_after, fl_name, lev')
+    LOCATION_TYPE = sys.argv[1]
+
+    NAME_TYPE = sys.argv[2]
+
+    ATTRIBUTE_TYPE = sys.argv[3]
+
+    BIRTHDAY_TYPE = sys.argv[4]
+
+    LINKAGE_TYPE = sys.argv[5]
+
+    print(LOCATION_TYPE, NAME_TYPE, ATTRIBUTE_TYPE, BIRTHDAY_TYPE, LINKAGE_TYPE)
+
+LINKAGE_TWITTER_PATH = r'D:\Data\Linkage\FL\FL18\linkage\twitterside.csv'
+LINKAGE_VOTER_PATH = r'D:\Data\Linkage\FL\FL18\linkage\voterside.csv'
+NAME_MAPPING_PATH = r'D:\Data\Linkage\FL\FL18\name_processing\name_mapping.txt'
+LOC_VOTERS_PATH = r'D:\Data\Linkage\FL\FL18\linkage\{}wise\voterside_{}.csv'
 
 hypocorism_dict = {}
 
@@ -123,27 +136,30 @@ def count_prefix_matched(voter_full_name, twitter_name):
 
     return count
 
-cities = pd.read_csv(LINKAGE_VOTER_PATH,
-                     header=0,
-                     usecols=['city'],
-                     converters={'city': str})['city'].unique()
+locations = pd.read_csv(LINKAGE_VOTER_PATH,
+                        header=0,
+                        usecols=[LOCATION_TYPE],
+                        converters={LOCATION_TYPE: str})[LOCATION_TYPE].unique()
 
-df_city_voters = {}
+locations = [loc for loc in locations if loc.isalnum()]
 
-for city in cities:
-    voters = pd.read_csv(CITY_VOTERS_PATH.format(city), header=0, index_col=0, converters={'fname': str,
+df_loc_voters = {}
+
+
+for loc in locations:
+    voters = pd.read_csv(LOC_VOTERS_PATH.format(LOCATION_TYPE, loc), header=0, index_col=0, converters={'fname': str,
                                                                                            'mname': str,
                                                                                            'lname': str,
-                                                                                           'city': str})
+                                                                                         LOCATION_TYPE: str})
     voters['birthday'] = voters['dob'].apply(lambda x: x[:5])
     voters['fl_name'] = voters[['fname', 'lname']].agg(lambda cols: ' '.join([col for col in cols if col]), axis=1)
     voters['full_name'] = voters[['fname', 'mname', 'lname']].agg(lambda cols: ' '.join([col for col in cols if col]), axis=1)
-    df_city_voters[city] = voters
+    df_loc_voters[loc] = voters
 
 df_twitter = pd.read_csv(LINKAGE_TWITTER_PATH,
                          header=0,
                          converters={'twitter_name': str,
-                                     'orig_city': str,
+                                     'orig_' + LOCATION_TYPE: str,
                                      'orig_fname': str,
                                      'orig_mname': str,
                                      'orig_lname': str})
@@ -156,21 +172,24 @@ hit = miss = 0
 for i, row in df_twitter.iterrows():
 
     voter_serial = row['voter_serial']
-    twitter_name = ' '.join(row['orig_fl_name'].split()) #row['orig_fl_name']
-    twitter_city = row['orig_city']
+    twitter_name = row['twitter_name'] if NAME_TYPE == 'twitter' else ' '.join(row['orig_fl_name'].split())
+    twitter_loc = row['orig_' + LOCATION_TYPE]
     twitter_birthday = row['orig_dob'][:5]
-    pred_sex = row['orig_sex'] #row['pred_sex']
-    pred_gen = row['orig_gen'] #row['pred_gen']
-    pred_race = row['orig_race'] #row['pred_race']
-    pred_party = row['orig_party'] #row['pred_party']
+    pred_sex = row['pred_sex'] if ATTRIBUTE_TYPE == 'predicted' else row['orig_sex']
+    pred_gen = row['pred_gen'] if ATTRIBUTE_TYPE == 'predicted' else row['orig_gen']
+    pred_race = row['pred_race'] if ATTRIBUTE_TYPE == 'predicted' else row['orig_race']
+    pred_party = row['pred_party'] if ATTRIBUTE_TYPE == 'predicted' else row['orig_party']
 
     fl_match = -1
     parts_match = -1
     prefix_match = -1
     sim_match = -1
 
-    df_voter = df_city_voters[twitter_city]
-    # df_voter = df_voter.loc[df_voter['birthday'] == twitter_birthday]
+    df_voter = df_loc_voters[twitter_loc]
+
+    if BIRTHDAY_TYPE == 'include':
+
+        df_voter = df_voter.loc[df_voter['birthday'] == twitter_birthday]
 
     twitter_name_tokens = [token.strip() for token in twitter_name.split()]
     twitter_fname = get_token(twitter_name, 0)
@@ -195,31 +214,6 @@ for i, row in df_twitter.iterrows():
                                         (df_voter['mname'].isin(twitter_name_parts)) |
                                         (df_voter['lname'].isin(twitter_name_parts))]
 
-        # df_voter['parts_matched'] = df_voter['full_name'].apply(count_parts_matched, args=(twitter_name,))
-        #
-        # df_voter_matched = df_voter.loc[df_voter['parts_matched'] > 0]
-        #
-        # parts_match = len(df_voter_matched)
-
-    # if len(df_voter_matched) == 0:
-    #
-    #     df_voter['prefix_matched'] = df_voter['full_name'].apply(count_prefix_matched, args=(twitter_name,))
-    #
-    #     df_voter_matched = df_voter.loc[df_voter['prefix_matched'] > 1]
-    #
-    #     prefix_match = len(df_voter_matched)
-
-    attribute_values = [('sex', pred_sex), ('race', pred_race), ('gen', pred_gen), ('party', pred_party)]
-
-    for attribute, value in attribute_values:
-
-        df_voter_matched_filtered = df_voter_matched.loc[df_voter_matched[attribute] == value]
-
-        if len(df_voter_matched_filtered) > 0:
-
-            df_voter_matched = df_voter_matched_filtered
-
-
     if len(df_voter_matched) == 0:
 
          status = 'none'
@@ -234,6 +228,18 @@ for i, row in df_twitter.iterrows():
         df_voter_matched = df_voter_matched.loc[df_voter_matched['name_sim'] == max_sim]
         sim_match = len(df_voter_matched)
 
+        if LINKAGE_TYPE == 'full':
+
+            attribute_values = [('sex', pred_sex), ('race', pred_race), ('gen', pred_gen), ('party', pred_party)]
+
+            for attribute, value in attribute_values:
+
+                df_voter_matched_filtered = df_voter_matched.loc[df_voter_matched[attribute] == value]
+
+                if len(df_voter_matched_filtered) > 0:
+
+                    df_voter_matched = df_voter_matched_filtered
+
         pred_voter_serial = df_voter_matched['name_sim'].idxmax()
 
         if voter_serial == pred_voter_serial:
@@ -245,9 +251,9 @@ for i, row in df_twitter.iterrows():
             status = 'miss'
             miss += 1
 
-    print('{}, {}, {}, {}, {}, {}, {}, {}, {}, {}'.format(i + 1, hit, miss, status, twitter_name, row['orig_full_name'], fl_match, parts_match, prefix_match, sim_match))
+    print('{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}'.format(i + 1, hit, miss, (i + 1 - hit - miss), status, twitter_name, row['orig_full_name'], fl_match, parts_match, prefix_match, sim_match))
 
-
+print(LOCATION_TYPE, NAME_TYPE, ATTRIBUTE_TYPE, BIRTHDAY_TYPE, LINKAGE_TYPE)
 
 
 

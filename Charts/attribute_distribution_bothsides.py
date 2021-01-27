@@ -46,6 +46,7 @@ SELECTED_TWITTER_IDS_PATH = r'D:\Data\Linkage\FL\FL18\ml_datasets\twitter_ids_{}
 
 
 df_twitter = pd.read_csv(ALL_TWEETS_PATH, header=0)
+df_twitter['sex'] = df_twitter['sex'].apply(helper.get_long_sex)
 df_twitter['race'] = df_twitter['race'].apply(helper.get_short_race)
 df_twitter['party'] = df_twitter['party'].apply(helper.get_short_party)
 df_twitter['dob_1946'] = df_twitter['dob'].apply(lambda x: int(x[-4:]) < 1950)
@@ -56,6 +57,7 @@ selected_ids = ids_df['twitter_id'].tolist()
 df_twitter = df_twitter.loc[df_twitter['twitter_id'].isin(selected_ids)]
 
 df_voter = pd.read_csv(VOTERS_PATH, header=0)
+df_voter['sex'] = df_voter['sex'].apply(helper.get_long_sex)
 df_voter['dob_1946'] = df_voter['dob'].apply(lambda x: int(x[-4:]) < 1950)
 df_voter['dob'] = df_voter['dob'].apply(helper.get_generation)
 
@@ -122,7 +124,7 @@ handles1, labels1 = ax1.get_legend_handles_labels()
 handles2, labels2 = ax2.get_legend_handles_labels()
 
 ax1.legend(handles1 + handles2, labels1 + labels2, loc='upper center', ncol=2)
-ax1.set_xlabel('(b) Sex')
+ax1.set_xlabel('(b) Gender')
 
 ax1 = fig.add_subplot(223)
 ax2 = ax1.twinx()

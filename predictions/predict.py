@@ -4,8 +4,6 @@ import sys
 import os
 import re
 
-from pip._vendor.pyparsing import unicode_set
-
 import helper
 from sklearn.decomposition import PCA
 from sklearn.multiclass import OneVsRestClassifier

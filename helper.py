@@ -1,10 +1,12 @@
+import sys
+sys.path.append(r'D:\Projects\Python\AttributePrediction\credentials')
+
 import mongo_credentials as mcred
 import twitter_credentials as tcred
 import urllib
 import pymongo
 import tweepy
 import csv
-import sys
 import re
 from datetime import datetime, timedelta
 from nltk.tokenize.casual import TweetTokenizer
@@ -116,6 +118,19 @@ def get_short_race(code):
         return 'UN'
     else:
         return None
+
+def get_long_sex(x):
+
+    if x == 'F':
+
+        return 'Female'
+
+    elif x == 'M':
+
+        return 'Male'
+
+    return 'Unknown'
+
 
 
 def get_maif_age_label(age):

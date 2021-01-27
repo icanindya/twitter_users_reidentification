@@ -15,9 +15,8 @@ y_race_2 = [77.97, 78.52, 78.69, 79.08, 79.83]
 y_party_2 = [54.24, 54.52, 54.64, 55.08, 55.66]
 
 fig = plt.figure()
-ax1 = fig.add_subplot(121)
-ax2  = fig.add_subplot(122)
 
+ax1 = fig.add_subplot(121)
 ax1.set_xlabel('Num. of tweets per row\n(Num. of rows = 37.5K)')
 ax1.set_ylabel('Prediction accuracy (%)')
 
@@ -30,13 +29,18 @@ ax1.set_xticks(x1)
 ax1.set_xticklabels([str(v) for v in x1[:-1]] + ['(all)'])
 ax1.set_ylim(bottom=48, top=90)
 
+# handles, labels = ax1.get_legend_handles_labels()
+# fig.legend(handles, labels, loc='lower center', ncol=4)
+# plt.tight_layout()
+# plt.show()
 
 
+ax2  = fig.add_subplot(122)
 ax2.set_xlabel('Num. of rows\n(Num. of tweets per row >= 50)')
-# ax2.set_ylabel('Prediction Accuracy (%)')
+# ax2.set_ylabel('Prediction accuracy (%)')
 
 ax2.plot(x2, y_gen_2, color='#009900', alpha=0.8, marker='o', ls='-', label='Generation')
-ax2.plot(x2, y_sex_2, color='#ff8000', alpha=0.8, marker='D', ls='-', label='Sex')
+ax2.plot(x2, y_sex_2, color='#ff8000', alpha=0.8, marker='D', ls='-', label='Gender')
 ax2.plot(x2, y_race_2, color='#2952a3', alpha=0.8, marker='s', ls='-', label='Race')
 ax2.plot(x2, y_party_2, color='#ff1a1a', alpha=0.8, marker="^", ls='-', label='Party Affiliation')
 
@@ -44,8 +48,10 @@ ax2.set_xticks(x2)
 ax2.set_xticklabels([str(v)+ 'K' for v in x2])
 ax2.set_ylim(bottom=48, top=90)
 
-handles, labels = ax1.get_legend_handles_labels()
+handles, labels = ax2.get_legend_handles_labels()
 fig.legend(handles, labels, loc='lower center', ncol=4)
 plt.tight_layout()
 plt.show()
+
+
 
